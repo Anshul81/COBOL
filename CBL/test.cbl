@@ -1,40 +1,77 @@
-       IDENTIFICATION DIVISION.
-       PROGRAM-ID. FactorialCalculator.
+IDENTIFICATION DIVISION.
+PROGRAM-ID. InventoryManager.
 
-       ENVIRONMENT DIVISION.
-       CONFIGURATION SECTION.
+ENVIRONMENT DIVISION.
+INPUT-OUTPUT SECTION.
+FILE-CONTROL.
+    SELECT InventoryFile ASSIGN TO 'Inventory.dat'
+        ORGANIZATION IS LINE SEQUENTIAL.
 
-       DATA DIVISION.
-       WORKING-STORAGE SECTION.
-       01  WS-NUMBER               PIC 9(02) VALUE 0.
-       01  WS-FACTORIAL            PIC 9(18) VALUE 1.
-       01  WS-COUNTER              PIC 9(02) VALUE 1.
-       01  WS-USER-INPUT           PIC X(03).
+DATA DIVISION.
+FILE SECTION.
+FD InventoryFile.
+01 InventoryRecord.
+   05 ItemCode PIC X(5).
+   05 ItemName PIC X(20).
+   05 ItemQuantity PIC 9(4).
 
-       PROCEDURE DIVISION.
-       MAIN-PARA.
-           DISPLAY "Enter a number to calculate its factorial (0-99): "
-           ACCEPT WS-USER-INPUT
-           MOVE FUNCTION NUMVAL(WS-USER-INPUT) TO WS-NUMBER
+WORKING-STORAGE SECTION.
+01 WS-EOF PIC X VALUE 'N'.
+   88 EOF VALUE 'Y'.
+   88 NOT-EOF VALUE 'N'.
+01 Response PIC X.
+01 AddMoreItems PIC X VALUE 'Y'.
+   88 Add-More VALUE 'Y'.
+   88 No-More VALUE 'N'.
+01 WS-InventoryRecord.
+   05 WS-ItemCode PIC X(5).
+   05 WS-ItemName PIC X(20).
+   05 WS-ItemQuantity PIC 9(4).
+01 Counter PIC 9(3) VALUE 0.
 
-           IF WS-NUMBER < 0 OR WS-NUMBER > 99
-               DISPLAY "Invalid input. Please enter a number between 0 and 99."
-               STOP RUN
-           END-IF
+PROCEDURE DIVISION.
+Begin.
+    OPEN OUTPUT InventoryFile
+    PERFORM UNTIL Add-More = No-More
+        DISPLAY "Enter item code: "
+        ACCEPT WS-ItemCode
+        DISPLAY "Enter item name: "
+        ACCEPT WS-ItemName
+        DISPLAY "Enter quantity: "
+        ACCEPT WS-ItemQuantity
 
-           PERFORM CALCULATE-FACTORIAL
-               UNTIL WS-COUNTER > WS-NUMBER
+        MOVE WS-ItemCode TO ItemCode
+        MOVE WS-ItemName TO ItemName
+        MOVE WS-ItemQuantity TO ItemQuantity
+        WRITE InventoryRecord
 
-           DISPLAY "The factorial of " WS-NUMBER " is " WS-FACTORIAL
+        DISPLAY "Add more items? (Y/N): "
+        ACCEPT Response
+        IF Response NOT = 'Y'
+            MOVE 'N' TO AddMoreItems
+        END-IF
 
-           STOP RUN.
+        ADD 1 TO Counter
+        IF Counter > 99
+            DISPLAY "Maximum item limit reached."
+            MOVE 'N' TO AddMoreItems
+        END-IF
+    END-PERFORM
 
-       CALCULATE-FACTORIAL.
-           IF WS-NUMBER = 0
-               MOVE 1 TO WS-FACTORIAL
-           ELSE
-               MULTIPLY WS-FACTORIAL BY WS-COUNTER
-               ADD 1 TO WS-COUNTER
-           END-IF.
+    CLOSE InventoryFile
+    DISPLAY "Inventory update complete."
 
-       END PROGRAM FactorialCalculator.
+    OPEN INPUT InventoryFile
+    PERFORM UNTIL EOF
+        READ InventoryFile INTO InventoryRecord
+            AT END
+                MOVE 'Y' TO WS-EOF
+            NOT AT END
+                DISPLAY "Item Code: " ItemCode,
+                        " Name: " ItemName,
+                        " Quantity: " ItemQuantity
+        END-READ
+    END-PERFORM
+    CLOSE InventoryFile
+
+    STOP RUN.
