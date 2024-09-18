@@ -1,4 +1,4 @@
-IDENTIFICATION DIVISION.
+      IDENTIFICATION DIVISION.
       PROGRAM-ID. PerformUntilVarMix.
       ENVIRONMENT DIVISION.
       DATA DIVISION.
@@ -40,5 +40,5 @@ IDENTIFICATION DIVISION.
           END-PERFORM.
           DISPLAY "All operations complete."
           STOP RUN.
-has context menu
+
 
