@@ -48,14 +48,6 @@
 
        WORKING-STORAGE SECTION.
 
-       COPY COSTM01.
-
-       COPY CVACT03Y.
-
-       COPY CUSTREC.
-
-       COPY CVACT01Y.
-
        01  COMP-VARIABLES          COMP.
            05  CR-CNT              PIC S9(4) VALUE 0.
            05  TR-CNT              PIC S9(4) VALUE 0.
