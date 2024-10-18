@@ -1,7 +1,7 @@
       *****************************************************************
       *         I D E N T I F I C A T I O N   D I V I S I O N         *
       *****************************************************************
-       IDENTIFICATION DIVISION.
+        IDENTIFICATION DIVISION.
 
         PROGRAM-ID.   US.
       * AUTHOR.       W CLAYTON.
