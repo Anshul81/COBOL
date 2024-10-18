@@ -3321,7 +3321,7 @@ CP1011     03 FILLER               PIC X(4) VALUE SPACES.
            03 CHECK-ENTRY-MESSAGE-2 PIC X(39).
 
 
-           EJECT
+           
       ***************************************
       *    C I C S   O U T P U T   A R E A  *
       ***************************************
@@ -3524,7 +3524,7 @@ MP1004          06 FILLER          PIC X(60)     VALUE SPACES.
        01  FILLER REDEFINES PLAY-DEEDIT-FLD-N.
            05 PLAY-DEEDIT-FLD-C    PIC X(9).
 
-           EJECT
+           
       *----------------------------------------------------------------*
       *            MESSAGES AND COMMENTS                               *
       *----------------------------------------------------------------*
@@ -4662,16 +4662,14 @@ CP0298           'DRIVER MUST FUEL AT CREDIT LOCATION'.
               10 FILLER                     PIC X(40) VALUE
                  'THE T/S HAS SET A RELATIONSHIP LIMIT FOR'.
               10 FILLER                     PIC X(70) VALUE
-                 'THIS TRUCK COMPANY. THIS LIMIT HAS BEEN EXCEEDED. REFE
-      -          'R TO FMRM 09'.
+                 'THIS TRUCK COMPANY THIS LIMIT HAS BEEN EXCEEDED REFER TO FMRM 09'.
 
            05 WS-CC-RELATION-CREDIT-ERR2-N  PIC S9(5) COMP-3 VALUE +519.
            05 WS-CC-RELATION-CREDIT-ERR2.
               10 FILLER                     PIC X(40) VALUE
                  'THE T/S HAS SET A RELATIONSHIP LIMIT FOR'.
               10 FILLER                     PIC X(70) VALUE
-                 'THIS TRUCK COMPANY. THIS LIMIT HAS BEEN EXCEEDED. REFE
-      -          'R TO FMRM 09'.
+                 'THIS TRUCK COMPANY THIS LIMIT HAS BEEN EXCEEDED REFER TO FMRM 09'.
 
            05 WS-CC-SC-CREDIT-ERR-N         PIC S9(5) COMP-3 VALUE +518.
            05 WS-CC-SC-CREDIT-ERR.
@@ -4683,8 +4681,7 @@ CP0298           'DRIVER MUST FUEL AT CREDIT LOCATION'.
 
            05 WS-CC-RECOURSE-SECURITY-REQ-N PIC S9(5) COMP-3 VALUE +515.
            05 WS-CC-RECOURSE-SECURITY-REQ   PIC X(100) VALUE
-              'INFORM THE ATTENDANT THAT THE CUSTOMERS CREDIT HAS BEEN E
-      -       'XCEEDED. RECOURSE SECURITY CARD IS REQUIRED'.
+              'INFORM THE ATTENDANT THAT THE CUSTOMERS CREDIT HAS BEEN EXCEEDED RECOURSE SECURITY CARD IS REQUIRED'.
 
            05 SECURITY-CARD-IS-INVALID      PIC X(40) VALUE
               'SECURITY CARD IS INVALID'.
