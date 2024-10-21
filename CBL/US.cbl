@@ -4662,14 +4662,14 @@ CP0298           'DRIVER MUST FUEL AT CREDIT LOCATION'.
               10 FILLER                     PIC X(40) VALUE
                  'THE T/S HAS SET A RELATIONSHIP LIMIT FOR'.
               10 FILLER                     PIC X(70) VALUE
-                 'THIS TRUCK COMPANY THIS LIMIT HAS BEEN EXCEEDED REFER TO FMRM 09'.
+                 'THIS TRUCK COMPANY THIS LIMIT HAS BEEN'.
 
            05 WS-CC-RELATION-CREDIT-ERR2-N  PIC S9(5) COMP-3 VALUE +519.
            05 WS-CC-RELATION-CREDIT-ERR2.
               10 FILLER                     PIC X(40) VALUE
                  'THE T/S HAS SET A RELATIONSHIP LIMIT FOR'.
               10 FILLER                     PIC X(70) VALUE
-                 'THIS TRUCK COMPANY THIS LIMIT HAS BEEN EXCEEDED REFER TO FMRM 09'.
+                 'THIS TRUCK COMPANY THIS LIMIT HAS '.
 
            05 WS-CC-SC-CREDIT-ERR-N         PIC S9(5) COMP-3 VALUE +518.
            05 WS-CC-SC-CREDIT-ERR.
