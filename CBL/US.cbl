@@ -657,7 +657,3845 @@ DR0422* 03/31/22  D REED       SE-1077 NALP CVC EPIC
       *------------------------------
         WORKING-STORAGE SECTION.
       *------------------------------
- 01 ABC-TEST-4500.
+MB0106 01  WS-TIMESTAMP.
+MB0106     05 WS-CURRENT-TIMESTAMP       PIC X(26).
+MB0106     05 WS-TIMESTAMP-GMT           PIC X(26).
+MB0106     05 WS-GMT-HOURS               PIC S999       COMP-3.
+091411     05 WS-TIMESTAMP-NP            PIC X(26).
+080210***** 19-CHARACTER TIMESTAMP USED FOR IRIS DATA
+080210     05 WS-TS-WORK.
+              10 WS-TS-DATE.
+                 15 WS-TS-CEN                  PIC  9(02).
+                 15 WS-TS-YEAR                 PIC  9(02).
+                 15                            PIC  X(01) VALUE '-'.
+                 15 WS-TS-MON                  PIC  9(02).
+                 15                            PIC  X(01) VALUE '-'.
+                 15 WS-TS-DAY                  PIC  9(02).
+              10                               PIC  X(01) VALUE '-'.
+              10 WS-TS-TIME.
+                 15 WS-TS-HOUR                 PIC  9(02).
+                 15                            PIC  X(01) VALUE '.'.
+                 15 WS-TS-MIN                  PIC  9(02).
+                 15                            PIC  X(01) VALUE '.'.
+                 15 WS-TS-SEC                  PIC  9(02).
+080210     05 WS-TS-DATE-IN               PIC  9(04).
+080210     05 WS-TS-TIME-IN               PIC  9(06).
+
+MN0207 01  WS-PRD-ALLOW                PIC S9(05)V99  VALUE ZEROS.
+MN0207 01  WS-PRD-CUR-DAY              PIC S9(05)V99  VALUE ZEROS.
+ED0213 01  WS-CASH-GALLONS             PIC S9(5)V99         VALUE +0.
+DR0317 01  WS-PRC-POS-VARIANCE         PIC S9V9(5) COMP-3 VALUE +0.
+DR0422 01  WS-DUP-COUNTER-MAX          PIC S9(05) COMP-3 VALUE 10000.
+DR0422 01  WS-NUM-7                    PIC  9(07) VALUE ZEROES.
+DR0422 01  WS-NUM-9                    PIC  9(09) VALUE ZEROES.
+DR0422 01  WS-NUM-15                   PIC  9(15) VALUE ZEROES.
+
+      *-----------------------------*
+      * DB2 COPYBOOKS AND WORK STUFF*
+      *-----------------------------*
+021908******** ALL INCLUDES EXCEPT SQLCA CHANGED TO COPY
+021908******** SO YOU CAN SPECIFY WHICH COPY LIBRARY
+JS1199     EXEC SQL INCLUDE SQLCA    END-EXEC.
+JS1199     COPY DDRVRGRP.
+JS1199     COPY DCUSDRVR.
+CP1011     COPY DMCAUTH.
+JS1199     COPY DCLUSKEY.
+JS1199     COPY ONLNDFC.
+CP0406     COPY DSBPRDXL.
+CP0406     COPY DSBPRDDS.
+SD0320     COPY DCRDTYUP.
+DR0116*****  USED TO CALL TSXCS060 FOR ID MATCH NUMBER
+DR0116     COPY TSXCW280.
+021908***** DB2 TABLE DBO.HIERARCHY
+021908     COPY DHIERACH.
+021908***** DB2 TABLE DBO.HIER_NODE
+021908     COPY DHINODE.
+021908***** DB2 TABLE DBO.HIER_UNIT_GRP_NODE
+021908     COPY DUNITNOD.
+021908***** DB2 TABLE DBO.HIER_DRV_GRP_NODE
+021908     COPY DHDRVNOD.
+KB0408***** DB2 TABLE DBO.HIER_DRV_GRP_DRV
+KB0408     COPY DHDRV.
+102810***** DB2 TABLE DBO.PRP_PRE_AUTH
+041112     COPY DPRPPAUT.
+091411***** DB2 TABLE DBO.PFID_CUST_XREF
+091411     COPY DPFIDCSX.
+020712***** DB2 TABLE DBO.PFID_MAINT
+PM0916     COPY DPFIDMNT.
+091411***** DB2 TABLE DBO.NET_PRICING_HDR
+091411     COPY DNETPHDR.
+091411***** DB2 TABLE DBO.NET_PRICING
+BG0418**   COPY DNETPRCG.
+BG0418     COPY DNETPRC1.
+CP1011***** DB2 TABLE DBO.TRNS_HIST
+CP1011     COPY DXTNHIST.
+041112***** DB2 TABLE DBO.RFID_XREF
+041112     COPY DRFIDXRF.
+041112***** DB2 TABLE DBO.CRD_TKN_XREF
+041112     COPY DCRDTKNX.
+SB0113***** DB2 TABLE DBO.CURR_RT
+SB0113     COPY DCURRR.
+100914***** DB2 TABLE DBO.CUST_UNIT
+100914     COPY DCUSUNT.
+100914***** DB2 TABLE DBO.CUST_UNIT_GRPS
+100914     COPY DCUUGRP.
+112014***** DB2 TABLE CXXCOW.PROD_LMT_NTWRK
+112014     COPY SPRDLMTN.
+SD0620***** FUEL/PROXIMITY COPYBOOK
+SD0620     COPY CXXCW0TE.
+011222***** TAX EXEMPT ACCOUNT COPYBOOK
+011222     COPY DTAXEXEA IN CPYREL.
+
+021908********** DB2 CURSORS
+021908     EXEC SQL DECLARE CUR_HIER_DRV_NODE CURSOR FOR
+              SELECT  NODE_ID,
+                      DRV_GRP_ID
+                FROM  DBO.HIER_DRV_GRP_NODE
+                WHERE HIER_ID         = :DHDRVNOD.HIER-ID  AND
+                      NODE_ID         = :DHDRVNOD.NODE-ID
+                FOR READ ONLY WITH UR
+           END-EXEC.
+
+021908     EXEC SQL DECLARE CUR_HIER_DRV CURSOR FOR
+              SELECT  B.DRV_ID,
+                      B.DRV_GRP_ID,
+DS0608                B.DRV_LST_NM,
+DS0608                B.DRV_FST_NM,
+DS0608                B.DRV_LIC_NBR,
+DS0608                B.DRV_LIC_ST
+                FROM  DBO.HIER_DRV_GRP_NODE  A,
+                      DBO.HIER_DRV_GRP_DRV   B
+                WHERE A.HIER_ID         = :DHDRVNOD.HIER-ID  AND
+                      A.NODE_ID         = :DHDRVNOD.NODE-ID  AND
+                      B.DRV_ID          = :DHDRV.DRV-ID      AND
+                      A.HIER_ID         = B.HIER_ID          AND
+                      A.DRV_GRP_ID      = B.DRV_GRP_ID
+                FOR READ ONLY WITH UR
+           END-EXEC.
+
+102810     EXEC SQL DECLARE CUR_PRE_AUTH CURSOR FOR
+              SELECT  PRE_AUTH_TS
+                FROM  DBO.PRP_PRE_AUTH
+                WHERE CRD_NBR         = :DPRPPAUT.CRD-NBR  AND
+                      MRCH_NBR        = :DPRPPAUT.MRCH-NBR AND
+                      PRE_AUTH_DT    >= :DPRPPAUT.PRE-AUTH-DT
+                ORDER BY PRE_AUTH_TS DESC
+                FOR READ ONLY WITH UR
+           END-EXEC.
+
+102810     EXEC SQL DECLARE CUR_PRE_AUTH_UPDT CURSOR FOR
+              SELECT  PRE_AUTH_DT,
+                      PRE_AUTH_TS,
+                      D1_AMT_LIM,
+                      D2_AMT_LIM,
+                      RFR_AMT_LIM,
+                      OTH_AMT_LIM,
+                      OIL_AMT_LIM,
+                      CASH_AMT_LIM
+                FROM  DBO.PRP_PRE_AUTH
+                WHERE CRD_NBR      = :DPRPPAUT.CRD-NBR     AND
+                      MRCH_NBR     = :DPRPPAUT.MRCH-NBR    AND
+                      PRE_AUTH_DT >= :DPRPPAUT.PRE-AUTH-DT AND
+                      POST_FLG     < 'P'
+                ORDER BY PRE_AUTH_TS DESC
+                FOR READ ONLY WITH UR
+           END-EXEC.
+
+CP0405*-----------------------------*
+CP0405* MQSERIES WORK FIELDS        *
+CP0405*-----------------------------*
+CP0405 01  MQM-GET-MESSAGE-OPTIONS.
+CP0405     COPY CMQGMOV.
+CP0405 01  MQM-CONSTANTS.
+CP0405     COPY CMQV.
+CP0405 01  MQM-PUT-MESSAGE-OPTIONS.
+CP0405     COPY CMQPMOV.
+CP0405 01  W03-PUT-BUFFER.
+CP0405     05 W03-CSQ4BQRM.
+CP0405     COPY CSQ4VB4.
+CP0405
+CP0405 01  W00-MESSAGE-BUFFER.
+CP0405     03  MQM-OBJECT-DESCRIPTOR.
+CP0405         COPY CMQODV.
+CP0405     03  MQM-MESSAGE-DESCRIPTOR.
+CP0405         COPY CMQMDV.
+CP0405     03  W00-MSGBUFFER.
+CP0405         05 W00-MSGBUFFER-ARRAY  PIC X(1) OCCURS 9950 TIMES.
+CP0405
+CP0405 01  WS-MQSERIES-WORK-FIELDS.
+CP0405     05 WS-QNAME-OUTBOUND        PIC X(48) VALUE SPACES.
+CP0405     05 WS-QLENGTH-OUTBOUND      PIC S9(9) BINARY VALUE 0.
+CP0405
+CP0405 01  W03-BUFFLEN                 PIC S9(9) BINARY VALUE 0.
+CP0405 01  W03-HCONN                   PIC S9(9) BINARY VALUE 0.
+CP0405 01  W03-HOBJ                    PIC S9(9) BINARY VALUE 0.
+CP0405 01  W03-OPENOPTIONS             PIC S9(9) BINARY.
+CP0405 01  W03-OPTIONS                 PIC S9(9) BINARY.
+CP0405 01  W03-COMPCODE                PIC S9(9) BINARY.
+CP0405 01  W03-COMPCODE-CHAR           PIC X(9)    VALUE SPACES.
+CP0405 01  W03-REASON                  PIC S9(9) BINARY.
+CP0405 01  W03-REASON-CHAR             PIC X(9)    VALUE SPACES.
+CP0405
+CP0405 01  WS-PGM-MQ-WORKFIELDS.
+CP0405     05 WS-BATCH-QUEUE-NAME      PIC X(48)
+CP0405        VALUE 'TSFM.FPLG.BATCH'.
+CP0405     05 WS-ONLINE-QUEUE-NAME     PIC X(48)
+CP0405        VALUE 'TSFM.FPLG.ONLINE'.
+CP0405     05 WS-QLENGTH-FPLG          PIC S9(9)  VALUE +2260.
+MP0411     05 WS-BTCHSET-QUEUE         PIC X(48)
+MP0411        VALUE 'TSMM.MMBS'.
+MP0411     05 WS-QLENGTH-BTCHSET       PIC S9(9)  VALUE +462.
+
+      *-----------------------------*
+      * DISCOUNT WORK AREA          *
+      *-----------------------------*
+082212 01  WS-FMCD-COMMAREA-CHG.
+      ***** FIELDS PASSED TO TSFMO0CD THAT CAN BE CHANGED;
+      ***** THESE FIELDS MOVED HERE FROM OTHER PARTS OF PROGRAM SO
+      ***** THEY CAN BE MOVED AS A GROUP
+           05 WS-COST-PLUS-USED         PIC  X(01)           VALUE 'N'.
+           05 WS-SETTLE-DIRECT-BILL-FLAG  PIC  X(01).
+JS0206     05 WS-PRD-CALC-TYPE          PIC  X(04).
+082008     05 WS-MANUAL-FEE             PIC S9(5)V999 COMP-3 VALUE +0.
+           05 WS-AMOUNT-OF-DISC-CPG     PIC S99V9999  COMP-3 VALUE ZERO.
+           05 SAVE-FMDL-SC-INVOICE-AMT  PIC S9(5)V99  COMP-3 VALUE +0.
+           05 WS-TOTAL-GALLONS          PIC S9(5)V99         VALUE +0.
+           05 WS-TOTAL-FACE             PIC S9(6)V99         VALUE +0.
+CP0700     05 WS-TOTAL-FACE-SC          PIC S9(6)V99         VALUE +0.
+CP0800     05 WS-SC-AUTO-CASH-ADD-ON    PIC S9(6)V99         VALUE +0.
+CP0800     05 WS-SC-MAN-CASH-ADD-ON     PIC S9(6)V99         VALUE +0.
+082008     05 WS-BASE-FUEL-RATE         PIC S9(5)V99  COMP-3 VALUE ZERO.
+082008     05 WS-MIXED-FUEL-RATE        PIC S9(5)V99  COMP-3 VALUE ZERO.
+JS0206*** (PRODUCT FEES WORK AREA) ***
+JS0206     05 WS-PRD-FEE-WORK-AREA.
+JS0206      10 FILLER OCCURS 3 TIMES.
+JS0206        15 WS-PRD-FEE-TYPE           PIC X(01).
+JS0206        15 WS-PRD-FUNDED-RATE        PIC S9(5)V99 COMP-3.
+JS0206        15 WS-PRD-DB-RATE            PIC S9(5)V99 COMP-3.
+JS0206        15 WS-PRD-FUNDED-RATE-ALTCUR PIC S9(5)V99 COMP-3.
+JS0206        15 WS-PRD-DB-RATE-ALTCUR     PIC S9(5)V99 COMP-3.
+JS0206        15 WS-PRD-SC-RATE            PIC S9(5)V99 COMP-3.
+JS0206        15 WS-PRD-SCM-AUTO-RATE      PIC S9(5)V99 COMP-3.
+JS0206        15 WS-PRD-SCM-MANUAL-RATE    PIC S9(5)V99 COMP-3.
+JS0206        15 WS-PRD-SCM-FLAT-OR-POF    PIC X(1).
+JS0206     05 WS-PRD-FEE-SC-WORK-AREA.
+JS0206      10 FILLER OCCURS 3 TIMES.
+JS0206        15 WS-PRD-PROD-FEE           PIC S9(5)V99 COMP-3.
+JS0206     05 WS-FMDL-PRODUCT-FEE-INFO.
+JS0206       10 WS-FMDL-PRODUCT-FEES OCCURS 3 TIMES.
+JS0206        15 WS-FMDL-PF-SC-FEE               PIC S9(05)V99  COMP-3.
+JS0206        15 WS-FMDL-PF-SC-FEE-SOURCE        PIC X(01).
+JS0206        15 WS-FMDL-PF-SC-FEE-LOC-TYPE      PIC X(02).
+JS0206        15 WS-FMDL-PF-SC-FEE-TYPE          PIC X(01).
+JS0206        15 WS-FMDL-PF-CUST-FEE             PIC S9(05)V99  COMP-3.
+JS0206        15 WS-FMDL-PF-CUST-FEE-SOURCE      PIC X(01).
+JS0206        15 WS-FMDL-PF-CUST-FEE-CUST-TYPE   PIC X(02).
+JS0206        15 WS-FMDL-PF-CUST-FEE-TYPE        PIC X(01).
+JS0298     05 WS-DISCOUNT-AND-FEE-AREA.
+             10 WS-DC-DISCOUNT-AMT        PIC S9(5)V99 COMP-3 VALUE +0.
+JS0298       10 WS-DC-SC-DISCOUNT-AMT     PIC S9(5)V99 COMP-3 VALUE +0.
+             10 WS-DC-SC-REBATE-AMT       PIC S9(5)V99 COMP-3 VALUE +0.
+             10 WS-DC-FEE-AMT             PIC S9(5)V99 COMP-3 VALUE +0.
+             10 WS-DC-FEE-AMT-FUEL        PIC S9(5)V99 COMP-3 VALUE +0.
+             10 WS-DC-FEE-AMT-CUSTOM      PIC S9(5)V99 COMP-3 VALUE +0.
+             10 WS-DC-FEE-AMT-RETAIN      PIC S9(5)V99 COMP-3 VALUE +0.
+             10 WS-DC-FEE-AMT-MANUAL      PIC S9(5)V99 COMP-3 VALUE +0.
+             10 WS-DC-DISCOUNT-FOCUS-SELECT PIC X(1)          VALUE ' '.
+             10 WS-DC-DISCOUNT-METHOD     PIC X(1)            VALUE ' '.
+             10 WS-DC-REBATE-AMT          PIC S9(5)V99 COMP-3 VALUE +0.
+             10 WS-DISCOUNT-TYPE-FLAG     PIC X(1)            VALUE ' '.
+              88 WS-DISCOUNT-TYPE-IS-CPG                      VALUE 'G'.
+              88 WS-DISCOUNT-TYPE-IS-POF                      VALUE 'F'.
+              88 WS-DISCOUNT-TYPE-IS-FLT                      VALUE '1'.
+              88 WS-DISCOUNT-TYPE-IS-COST-PLUS                VALUE 'C'.
+              88 WS-DISCOUNT-TYPE-IS-NATS                     VALUE 'U'.
+              88 WS-DISCOUNT-TYPE-IS-CPG-POF                  VALUE 'B'.
+              88 WS-DISCOUNT-TYPE-IS-CPG-FLT                  VALUE '2'.
+              88 WS-DISCOUNT-TYPE-IS-POF-FLT                  VALUE '3'.
+              88 WS-DISCOUNT-TYPE-IS-ALL                      VALUE '4'.
+CP0400       10 WS-SC-CORP-REB-AMT        PIC S9(5)V99 COMP-3 VALUE +0.
+CP0400       10 WS-ADJ-FOR-CORP-REB       PIC X               VALUE ' '.
+SB0614 01  WS-FMCD-MISC-AREA.
+SB0614     05  WS-MERCH-SURCHRG-FLAG      PIC X(01)           VALUE ' '.
+SB0614         88 APPLY-MERCH-SURCHRG     VALUE 'Y'.
+SB0614     05  WS-MERCH-SURCHRG-TOTAL     PIC S9(7)V99 COMP-3 VALUE +0.
+SB0115     05  WS-MINIMUM-FEE-FLAG        PIC X(1)            VALUE ' '.
+SB0115         88 APPLY-SC-MIN-FEE        VALUE 'Y'.
+SB0115     05  WS-MIN-FUEL-FEE-DIFF       PIC S9(3)V99 COMP-3 VALUE +0.
+SB0115     05  WS-GALUP-FEE-FLAG          PIC X(1)            VALUE ' '.
+SB0115         88 APPLY-SC-GALUP-FEE      VALUE 'Y'.
+SB0115     05  WS-GALUP-FUEL-FEE          PIC S9(3)V99 COMP-3 VALUE +0.
+SB0516     05  WS-DC-DISCOUNT-SMFL        PIC S9(5)V99 COMP-3 VALUE +0.
+
+060512***** ADJUSTED TO ACTUAL SIZE OF WS-DISCOUNT-AND-FEE-AREA
+082212 01  WS-HOLD-DISC-AND-FEE-AREA      PIC X(044).
+
+JS0298 01  WS-TOTAL-AMOUNT-FLDS.
+           05 WS-BILLABLE            PIC S9(5)V99    VALUE ZERO COMP-3.
+           05 WS2-BILLABLE           PIC S9(5)V99    VALUE ZERO COMP-3.
+           05 WS3-BILLABLE           PIC S9(5)V99    VALUE ZERO COMP-3.
+           05 WS-NON-BILLABLE        PIC S9(5)V99    VALUE ZERO COMP-3.
+           05 WS2-NON-BILLABLE       PIC S9(5)V99    VALUE ZERO COMP-3.
+           05 WS3-NON-BILLABLE       PIC S9(5)V99    VALUE ZERO COMP-3.
+           05 WS-CAN-BILLABLE        PIC S9(5)V99    VALUE ZERO COMP-3.
+           05 WS-US-BILLABLE         PIC S9(5)V99    VALUE ZERO COMP-3.
+           05 WS-CURXMN              PIC S9(6)V99    VALUE ZERO.
+           05 WS2-CURXMN             PIC S9(6)V99    VALUE ZERO.
+           05 WS3-CURXMN             PIC S9(6)V99    VALUE ZERO.
+           05 WS-TOTAL-REQUEST       PIC S9(6)V99    VALUE ZERO COMP-3.
+           05 WS2-TOTAL-REQUEST      PIC S9(6)V99    VALUE ZERO COMP-3.
+           05 WS3-TOTAL-REQUEST      PIC S9(6)V99    VALUE ZERO COMP-3.
+           05 WS2-BILLABLE-FUEL      PIC S9(5)V99    VALUE ZERO COMP-3.
+           05 WS2-NON-BILLABLE-FUEL  PIC S9(5)V99    VALUE ZERO COMP-3.
+JS0298 01  WS-HOLD-TOTAL-AMOUNT-FLDS PIC X(100).
+
+       01  SETTLEMENT-WORK-FIELDS.
+           05 WS-BALANCE-GROUP-ID               PIC S9(9) COMP-3.
+           05 WS-CLOSING-GROUP-ID               PIC S9(9) COMP-3.
+           05 WS-PAYMENT-GROUP-ID               PIC S9(9) COMP-3.
+           05 WS-BALANCE-ITEM-NUMBER            PIC S9(7) COMP-3.
+           05 WS-CLOSING-ITEM-NUMBER            PIC S9(7) COMP-3.
+           05 WS-PAYMENT-ITEM-NUMBER            PIC S9(7) COMP-3.
+           05 WS-CREATE-BALANCE-GROUP           PIC X(1).
+           05 WS-CREATE-CLOSING-GROUP           PIC X(1).
+           05 WS-CREATE-PAYMENT-GROUP           PIC X(1).
+           05 WS-SETTLE-TS-CODE                 PIC X(10).
+           05 WS-SETTLE-ORIG-TS                 PIC X(10).
+JS0298     05 WS-SPLIT-SETTLE-FLAG              PIC X(1).
+JS0298     05 WS-SPLIT-SETTLE-COUNT             PIC 9(1).
+
+SD0222 01  WS-PRODUCT-DISCOUNT-AREA.
+SD0222     05  WS-PD-OTH-FUEL-DISC       PIC 9(3)V99.
+SD0222     05  WS-PD-RFR-FUEL-DISC       PIC 9(3)V99.
+SD0222     05  WS-PD-NR1-FUEL-DISC       PIC 9(3)V99.
+SD0222     05  WS-PD-NR2-FUEL-GAL        PIC 9(3)V99.
+SD0222     05  WS-PD-NR2-FUEL-PPG        PIC 99V9(3).
+SD0222     05  WS-PD-NR2-FUEL-COST       PIC 9(3)V99.
+SD0222     05  WS-PD-NR2-FUEL-DISC       PIC 9(3)V99.
+SD0222     05  WS-PD-DEF-FUEL-GAL        PIC 9(3)V99.
+SD0222     05  WS-PD-DEF-FUEL-PPG        PIC 99V9(3).
+SD0222     05  WS-PD-DEF-FUEL-COST       PIC 9(3)V99.
+SD0222     05  WS-PD-DEF-FUEL-DISC       PIC 9(3)V99.
+SD0222     05  WS-PD-CNG-FUEL-GAL        PIC 9(3)V99.
+SD0222     05  WS-PD-CNG-FUEL-PPG        PIC 99V9(3).
+SD0222     05  WS-PD-CNG-FUEL-COST       PIC 9(3)V99.
+SD0222     05  WS-PD-CNG-FUEL-DISC       PIC 9(3)V99.
+SD0222     05  WS-PD-GAS-FUEL-GAL        PIC 9(3)V99.
+SD0222     05  WS-PD-GAS-FUEL-PPG        PIC 99V9(3).
+SD0222     05  WS-PD-GAS-FUEL-COST       PIC 9(3)V99.
+SD0222     05  WS-PD-GAS-FUEL-DISC       PIC 9(3)V99.
+
+      *-------------------------------------*
+      * ATM WORK AREA                       *
+      *-------------------------------------*
+MP0106     COPY ATMSTANC.
+SD0621     COPY TSXCW030.
+072811     COPY TSXCW008.
+
+       01  ATM-WORK-AREA.
+           05 WS-TSXCO0AT-COMM-AREA.
+              10 FILLER                PIC X(4).
+DR0121        10 WS-TSXCO0AT-COMMAREA  PIC X(2452).
+MP0800 01  WS-SAVE-ATM.
+MP0800     05 WS-SAVE-ATM-ERROR-NUMBER  PIC S9(5) COMP-3 VALUE +0.
+           05 WS-SAVE-ATM-ERROR-MESSAGE PIC X(80)        VALUE SPACES.
+       01  POS-OUTPUT-AREA.
+           05 POS-ERROR-NUMBER        PIC S9(5) COMP-3 VALUE +0.
+081414     05 POS-MESSAGE             PIC X(413) VALUE SPACES.
+
+SD0620 01  WS-MASTER-CUST                PIC X(2040).
+SD0620 01  WS-MASTER-UNIT                PIC X(700).
+      *** (MISC WORK FIELDS) ****
+       01  FILLER.
+JS0218     05 WS-DISC-AMTP               PIC 9(3)V99 COMP-3.
+ED0406     05 WS-TSFMU020-PROG           PIC X(08) VALUE 'TSFMU020'.
+CP1011     05 WS-CXUTS400                PIC X(08) VALUE 'CXUTS400'.
+CP1011     05 WS-CALC-AUTH-NR            PIC 9(09) VALUE ZEROS.
+CP1011     05 WS-LINK-TO-I-SW            PIC X(01) VALUE 'N'.
+CP1011     05 WRK-EIBRESP                PIC 9(03) VALUE ZEROS.
+CP1011     05 FILL-CHAR                  PIC X(01) VALUE SPACES.
+CP1011     05 WS-CXUTSJON-OPTIONS        PIC X(03) VALUE 'YNN'.
+CP1011     05 WS-CNL-6-SW                PIC X(01) VALUE 'N'.
+CP1011     05 WS-CTRL-LOOP-SW            PIC X(01) VALUE 'N'.
+CP1011     05 WS-CTRL-MULT-SW            PIC X(01) VALUE 'N'.
+CP1011     05 WS-CTRL-MATCH-SW           PIC X(01) VALUE 'N'.
+SD0122     05 WS-PRE-AUTH-SW             PIC X(01) VALUE 'N'.
+SD0122        88 WS-PRE-AUTH-FOUND                 VALUE 'Y'.
+SD0122     05 WS-SP14-ELAPSED-TIME-MINS  PIC S9(8) USAGE COMP.
+CP1011     05 WS-CTRL-LOOP-CTR           PIC 9(02) VALUE ZEROS.
+CP1011     05 WS-LOOPS                   PIC 9(02) VALUE ZEROS.
+040912     05 WS-RELOCATE-UNIT-ADJUST    PIC X(01) VALUE 'N'.
+040912     05 WS-DRAFT-WAS-CANCELLED     PIC X(01) VALUE SPACES.
+041112     05 WS-FUEL-PROD-PURCHASED     PIC X(03) VALUE SPACES.
+041112     05 WS-RFID-XREF-READ          PIC X(01) VALUE SPACES.
+041112     05 WS-USE-RFID-XREF           PIC X(01) VALUE SPACES.
+050712     05 WS-RECOMP-SW               PIC X(01) VALUE SPACES.
+SD1020     05 WS-1TIME-OFF-CSTAND-FLG    PIC X(01) VALUE SPACES.
+SD1020        88 ONE-TIME-OFF-CSTAND-TRAN VALUE 'Y'.
+           05 WS-TIME-CURR               PIC S9(15) COMP-3 VALUE ZERO.
+           05 WS-TIME-START              PIC S9(15) COMP-3 VALUE ZERO.
+           05 WS-TIME-END                PIC S9(15) COMP-3 VALUE ZERO.
+JS0402     05 WS-DI-TRANSACTION-NUMBER   PIC S9(07) COMP-3 VALUE ZERO.
+ED1102     05 WS-SUB1                    PIC 9(03) VALUE 1.
+SB1115     05 WS-PRD-SUB                 PIC 9(03) VALUE 0.
+           05 WS-EXPDATE-MMYY            PIC 9(04) VALUE ZERO.
+           05 WS-EXPDATE-YYMM            PIC 9(04) VALUE ZERO.
+           05 WS-EXP-DATE-YYYYMM         PIC 9(6)  VALUE ZERO.
+BG0122     05 WS-DRVR-ID-HOLD-REL-DT     PIC 9(8)  VALUE ZEROS.
+BG0122     05 WS-CURR-DRVR-ID-HOLD-REL-TM
+BG0122                                   PIC 9(7)  VALUE ZEROS.
+BG0122     05 FILLER REDEFINES WS-CURR-DRVR-ID-HOLD-REL-TM.
+BG0122        10 FILLER                  PIC X(1).
+BG0122        10 WS-CURR-DRVR-ID-HOLD-REL-HR-MI
+BG0122                                   PIC 9(4).
+BG0122        10 FILLER                  PIC X(2).
+011222     05 WS-PROC-ACCT-NBR           PIC X(14) VALUE SPACES.
+           05 WS-UPDATE-EXP-DATE         PIC X(1)  VALUE 'Y'.
+           05 WS-UNIT-NR.
+              10 WS-UNIT-NR-10.
+                 15 FILLER               PIC X(04) VALUE SPACES.
+                 15 WS-UNIT-NR-06        PIC X(06) VALUE SPACES.
+           05 WS-ADJUST-UNIT-NR.
+              10 FILLER                  PIC X(04) VALUE SPACES.
+              10 WS-ADJUST-UNIT-NR-06    PIC X(06) VALUE SPACES.
+           05 WS-ZERO                    PIC X(1) VALUE '0'.
+JS0206     05 WS-FLEET-LIMIT-AVAIL       PIC S9(7)V99 COMP-3 VALUE ZERO.
+           05 WS-EXP-DATE                PIC 9(4).
+CP1011     05 WS-SQLCODE                 PIC S9(3).
+JS1199        88 WS-SQLCODE-WAIT                VALUE -904, -911.
+JS1199     05 WS-BALANCE-BASED-FLAG       PIC X(1) VALUE 'N'.
+JS1199        88 WS-BALANCE-BASED                  VALUE 'Y'.
+JS1199        88 WS-LIMIT-BASED                    VALUE 'N'.
+MP0205     05 WS-CDN-CUST-NUMBER          PIC X(10) VALUE SPACES.
+JS1199     05 WS-OFF-HOURS-FLAG           PIC X(1).
+JS1199     05 WS-OFF-HOURS-WARNING-FLAG   PIC X(1) VALUE 'N'.
+JS1199     05 WS-CARD-BLOCKED-FLAG        PIC X(1) VALUE 'N'.
+JS1199     05 WS-FLEET-PROD               PIC 9(5) VALUE ZERO.
+MP0600     05 WS-PETRO-CANADA-CHAIN       PIC X(10) VALUE 'PC002'.
+MP0900     05 WS-PETRO-CANADA-RESP.
+MP0900        07 FILLER                   PIC X(6) VALUE ' DATE:'.
+MP0900        07 WS-PETRO-CANADA-DATE     PIC X(10) VALUE SPACES.
+MP0402     05 WS-ATM-REVERSAL-FLAG        PIC X     VALUE 'N'.
+MP0402        88 THIS-IS-AN-ATM-REVERSAL            VALUE 'Y'.
+MP0903     05  WS-STANDIN-REVERSE-FL      PIC X(01) VALUE 'N'.
+MP0903         88 WS-STANDIN-REVERSE                VALUE 'Y'.
+           05 WS-TAX-PARM                 PIC X(1) VALUE 'A'.
+           05 WS-TAX-COMPUTED-FLAG        PIC X(1) VALUE 'N'.
+           05 WS-CXXCO0CS-ABEND.
+              10 FILLER                   PIC X(2) VALUE 'CS'.
+              10 WS-CXXCO0CS-ABEND-CODE   PIC X(2) VALUE SPACES.
+102810     05 WS-TSFMO0LP-ABEND.
+102810        10 FILLER                   PIC X(2) VALUE 'LP'.
+102810        10 WS-TSFMO0LP-ABEND-CODE   PIC X(2) VALUE SPACES.
+           05 WS-CXXCO0PU-ABEND.
+              10 FILLER                   PIC X(2) VALUE 'PU'.
+              10 WS-CXXCO0PU-ABEND-CODE   PIC X(2) VALUE SPACES.
+           05 WS-RETAIL-PPG-NR2           PIC S9(2)V999 COMP-3 VALUE +0.
+           05 WS-RETAIL-PPG-NR1           PIC S9(2)V999 COMP-3 VALUE +0.
+           05 WS-RETAIL-PPG-TRAILER       PIC S9(2)V999 COMP-3 VALUE +0.
+JS0999     05 WS2-RETAIL-PPG-NR2          PIC S9(2)V999 COMP-3 VALUE +0.
+JS0999     05 WS2-RETAIL-PPG-NR1          PIC S9(2)V999 COMP-3 VALUE +0.
+JS0999     05 WS2-RETAIL-PPG-TRAILER      PIC S9(2)V999 COMP-3 VALUE +0.
+JS0999     05 WS3-RETAIL-PPG-NR2          PIC S9(2)V999 COMP-3 VALUE +0.
+JS0999     05 WS3-RETAIL-PPG-NR1          PIC S9(2)V999 COMP-3 VALUE +0.
+JS0999     05 WS3-RETAIL-PPG-TRAILER      PIC S9(2)V999 COMP-3 VALUE +0.
+JS0298     05 WS-SCPM-LEVEL-1-VARIANCE     PIC S9(2)V999 COMP-3.
+           05 WS-HOLD-COM-SPECIAL-SETTLE    PIC X(1).
+JS1203     05 WS-HOLD-CUSTOMER-ID           PIC X(10).
+MP1204     05 WS-TABLE-CODE                 PIC S9(3) COMP-3 VALUE +1.
+           05 WS-HOLD-SIR-KEY               PIC X(23).
+           05 WS-EXIT-PROGRAM-FLAG          PIC X(1)          VALUE 'N'.
+           05 WS-CASH-AVAILABLE-FLAG        PIC X(1).
+           05 WS-WORK-CURR-DATE             PIC 9(8).
+           05 FILLER REDEFINES WS-WORK-CURR-DATE.
+              10 WS-WORK-CURR-DATE-YYYY     PIC 9(4).
+              10 FILLER REDEFINES WS-WORK-CURR-DATE-YYYY.
+                 15 WS-WORK-CURR-DATE-CEN   PIC 9(2).
+                 15 WS-WORK-CURR-DATE-YY    PIC 9(2).
+              10 WS-WORK-CURR-DATE-MM       PIC 9(2).
+              10 WS-WORK-CURR-DATE-DD       PIC 9(2).
+           05 WS-WORK-PEND-DATE             PIC 9(8).
+SB0614     05 WS-EXP-BAL-NEG-AMT      PIC S9(7)V99 COMP-3 VALUE +0.
+SB0614     05 WS-MERCH-SURCHRG-AMT-SC PIC S9(7)V99 COMP-3 VALUE +0.
+SB0614     05 WS-MERCH-SURCHRG-AMT-ADJ PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-NR2-SELECT-DISCOUNT  PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-NR1-SELECT-DISCOUNT  PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-REF-SELECT-DISCOUNT  PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-OTH-SELECT-DISCOUNT  PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-OIL-SELECT-DISCOUNT  PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-PR1-SELECT-DISCOUNT  PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-PR2-SELECT-DISCOUNT  PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-PR3-SELECT-DISCOUNT  PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-TOT-SELECT-DISCOUNT  PIC S9(7)V99 COMP-3 VALUE +0.
+JS0618     05 WS-PROD-COST-RATIO      PIC S9(3)V9(9) COMP-3 VALUE +0.
+061815     05 WS-PROD-SPLIT-DISCOUNT  PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-NR1-TAX-PROD-COST    PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-NR2-TAX-PROD-COST    PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-REF-TAX-PROD-COST    PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-OTH-TAX-PROD-COST    PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-NR2-TRANS-AMT-BAL    PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-NR1-TRANS-AMT-BAL    PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-REF-TRANS-AMT-BAL    PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-OTH-TRANS-AMT-BAL    PIC S9(7)V99 COMP-3 VALUE +0.
+061815     05 WS-NR2-BASE-AMT         PIC S9(5)V99 COMP-3 VALUE +999.
+061815     05 WS-NR1-BASE-AMT         PIC S9(5)V99 COMP-3 VALUE +999.
+061815     05 WS-REF-BASE-AMT         PIC S9(5)V99 COMP-3 VALUE +999.
+061815     05 WS-OTH-BASE-AMT         PIC S9(5)V99 COMP-3 VALUE +999.
+MP1004     05 WS-WORK-TOTAL-AR        PIC S9(5)V99 COMP-3 VALUE +0.
+MN1007     05 WS-WORK-NR-OF-GALLONS   PIC S9(7)V99 COMP-3 VALUE +0.
+MP1004     05 WS-WORK-PRICE-PER-GLLN  PIC S99V999  COMP-3 VALUE +0.
+082008     05 WS-WORK-TOTAL-COST      PIC S9(5)V99 COMP-3 VALUE +0.
+MP1004     05 WS-WORK-TRANS-NR        PIC S9(7)    COMP-3 VALUE +0.
+MP1004     05 WS-WORK-NW-DATE         PIC 9(6)     COMP-3 VALUE  0.
+MP1004     05 WS-WORK-LESS-CHARGE     PIC X(1)            VALUE SPACES.
+MP1004        88 TRANS-LESS-CHARGES                       VALUE 'Y'.
+           05 WS-TRENDAR-EQUIP-FOUND  PIC X(1).
+           05 WS-EXPAND-DISCOUNT-MSG  PIC X    VALUE 'N'.
+           05 WS-EXPAND-FEE-MSG       PIC X    VALUE 'N'.
+           05 WS-EXPAND-BOTH-MSG      PIC X    VALUE 'N'.
+           05 WS-AUTO-GAS-PUMP-NRX.
+              10 WS-AUTO-GAS-PUMP-NR  PIC 9(2).
+           05 WS-ACCT-CODE            PIC X(5).
+              88 WS-ACCT-CODE-PRNT-FLAG-U       VALUES 'WA050' 'WA084'
+                                                       'WA146' 'WA154'
+                                                       'WA155' 'WA159'.
+              88 WS-ACCT-CODE-LANDSTAR          VALUES 'RA401' 'PT001'
+                                                       'IN305' 'LI982'.
+           05 WS-PRM-VRU-PIN-ATTEMPTS PIC 9(1).
+           05 WS-CANADIAN-AREA-CODE   PIC X(1)      VALUE 'N'.
+           05 WS-CONVERT-CURR-TYPE    PIC X(1).
+           05 WS-CONVERT-AMOUNT       PIC S9(7)V99 COMP-3.
+           05 WS-CONVERT-AMOUNT1      PIC S9(7)V99 COMP-3.
+           05 WS-CONVERT-AMOUNT2      PIC S9(7)V99 COMP-3.
+           05 WS-CONVERT-AMOUNT3      PIC S9(7)V99 COMP-3.
+
+CP1011     05 WS-CONTROL-NR           PIC 9(9)      VALUE ZEROES.
+CP1011     05 WS-CONTROL-NR-SETTLE    PIC 9(9)      VALUE ZEROES.
+           05 FILLER                  PIC X(1)      VALUE 'N'.
+              88 WS-BILLABLE-IS-ALL-CASH            VALUE 'Y'.
+              88 WS-BILLABLE-IS-NOT-ALL-CASH        VALUE 'N'.
+           05 WS-VRU-COUNTRY-FLAG     PIC X(1).
+           05 WS-PROD-AMOUNT          PIC S9(5)V99  VALUE ZEROS.
+           05 WS-WHICH-PROD           PIC 9(1)      VALUE ZEROES.
+021908     05 WS-UNITMST-UNIT         PIC X(1)      VALUE SPACE.
+021908     05 WS-PRMINFO-READ-SW      PIC X(1)      VALUE SPACE.
+021908     05 WS-HIER-SW              PIC X(1)      VALUE SPACE.
+021908        88 ON-HIERARCHY                       VALUE 'Y'.
+021908     05 DONE                    PIC S9(4) COMP VALUE +0.
+021908     05 REPEAT                  PIC S9(4) COMP VALUE +1.
+021908     05 WS-LOOP-STATUS          PIC S9(4) COMP VALUE +0.
+021908     05 51028-LOOP-STATUS       PIC S9(4) COMP VALUE +0.
+021908***** THE FOLLOWING BLOCK OF FIELDS REPLACES CDNCUST FIELDS;
+021908***** THESE FIELDS CAN BE POPULATED FROM CDNCUST OR HIERARCHY TBL
+021908     05 WS-COUNTRY-CODE         PIC X(02).
+021908     05 WS-ONE-TIME-LIMIT       PIC X(01).
+021908       88  WS-ONE-TIME-CASH-LIMIT-AVAIL        VALUES 'C' 'B'.
+021908       88  WS-ONE-TIME-PURC-LIMIT-AVAIL        VALUES 'P' 'B'.
+021908     05 WS-PRODUCT-STANDARD     PIC X(01).
+021908       88  WS-CHANGE-LIMITS-BY-UNIT            VALUE  'Y'.
+021908     05 WS-TRIP-ALLOWANCE       PIC X(01).
+021908     05 WS-CASH-ADVANCE-FLAG    PIC X(01).
+021908     05 WS-CO-DRVR-NAME-ENTERED PIC X(01).
+MP1208     05 WS-DIRECT-BILLING-PROD  PIC 9          VALUE 0.
+021908*******************************************
+           05 WS-NATS-PRE-AUTH-FLAG   PIC X(1).
+050316***** TABLE CHANGED TO ALPHA SO SPACES CAN BE IN 'PLACE-HOLDER'
+050316***** PRODUCT CODE VALUES; RECEIVING FIELD IS ALSO ALPHA
+           05 WS-NATS-PROD-TABLE-DATA.
+MN0207        10 FILLER               PIC X(3)  VALUE '080'.
+              10 FILLER               PIC X(3)  VALUE '105'.
+MN0207        10 FILLER               PIC X(3)  VALUE '129'.
+              10 FILLER               PIC X(3)  VALUE '121'.
+              10 FILLER               PIC X(3)  VALUE '085'.
+              10 FILLER               PIC X(3)  VALUE '116'.
+MN0207        10 FILLER               PIC X(3)  VALUE '130'.
+              10 FILLER               PIC X(3)  VALUE '100'.
+MN0207        10 FILLER               PIC X(3)  VALUE '125'.
+              10 FILLER               PIC X(3)  VALUE '116'.
+MN0207        10 FILLER               PIC X(3)  VALUE '122'.
+ED0505        10 FILLER               PIC X(3)  VALUE '124'.
+ED0505        10 FILLER               PIC X(3)  VALUE '116'.
+MN0207        10 FILLER               PIC X(3)  VALUE '118'.
+ED0505        10 FILLER               PIC X(3)  VALUE '116'.
+MN0207        10 FILLER               PIC X(3)  VALUE '115'.
+ED0505        10 FILLER               PIC X(3)  VALUE '116'.
+ED0505        10 FILLER               PIC X(3)  VALUE '116'.
+ED0505        10 FILLER               PIC X(3)  VALUE '116'.
+ED0505        10 FILLER               PIC X(3)  VALUE '116'.
+ED0505        10 FILLER               PIC X(3)  VALUE '116'.
+ED0505        10 FILLER               PIC X(3)  VALUE '116'.
+ED0505        10 FILLER               PIC X(3)  VALUE '116'.
+112409        10 FILLER               PIC X(3)  VALUE '116'.
+112409        10 FILLER               PIC X(3)  VALUE '082'.
+112409        10 FILLER               PIC X(3)  VALUE '140'.
+050316        10 FILLER               PIC X(3)  VALUE SPACES.
+050316        10 FILLER               PIC X(3)  VALUE SPACES.
+050316        10 FILLER               PIC X(3)  VALUE SPACES.
+050316        10 FILLER               PIC X(3)  VALUE SPACES.
+050316        10 FILLER               PIC X(3)  VALUE SPACES.
+050316        10 FILLER               PIC X(3)  VALUE SPACES.
+050316        10 FILLER               PIC X(3)  VALUE SPACES.
+050316        10 FILLER               PIC X(3)  VALUE SPACES.
+050316        10 FILLER               PIC X(3)  VALUE '591'.
+050316        10 FILLER               PIC X(3)  VALUE '592'.
+           05 FILLER REDEFINES WS-NATS-PROD-TABLE-DATA.
+050316        10 WS-NATS-PROD-TABLE   PIC X(3) OCCURS 36 TIMES.
+           05 WS-WORK-IOL-MAX-LITERS  PIC 9(9)V99 COMP-3.
+           05 WS-WORK-FIELD           PIC X(2500).
+           05 WS-CDN-MONEY-INVOICE PIC X(2).
+              88 WS-CDN-MONEY-INVOICE-EXP-CASH    VALUES 'F ', 'EF',
+                                                         'PF', 'FP',
+                                                         'A '.
+           05 WS-COST-PLUS-CPG-FEE1 PIC S9(5)V9(5) COMP-3 VALUE ZERO.
+           05 WS-COST-PLUS-CPG-FEE2 PIC S9(5)V9(5) COMP-3 VALUE ZERO.
+           05 WS-CUSTOM-FEE-TOTAL   PIC S9(5)V99   COMP-3.
+           05 WS-LAST-SCMM-READ     PIC X(10)   VALUE SPACES.
+           05 WS-CC-PIN-CHECK       PIC S9(8)   COMP.
+           05 WS-PIN-NR             PIC S9(15)  VALUE ZEROS.
+           05 WS-BINARY-PIN         PIC S9(8)   COMP.
+           05 WS-VALIDATE-CKDIGIT   PIC X(1)    VALUE 'Y'.
+      **** (MISC WORK FIELDS) ****
+           05 WS-INVOICE.
+              10 WS-INVOICE-DD      PIC 9(2).
+              10 WS-INVOICE-TIME   PIC 9(6).
+           05 WS-ADD-ON            PIC S9(5)V99    VALUE ZERO COMP-3.
+JS0304     05 WS-AVAIL             PIC S9(9)V99    VALUE ZERO COMP-3.
+           05 WS-HOLD-ODR-AMT      PIC S9(6)V99    VALUE ZERO COMP-3.
+           05 WS-HOLD-ODR-NAME     PIC X(20)       VALUE SPACES.
+           05 WS-HOLD-POS-ERROR-NUMBER PIC S9(5)   VALUE ZEROES.
+           05 WS-HOLD-POS-ERROR-MSG    PIC X(80)   VALUE SPACES.
+           05 WS-CC-AVAIL          PIC S9(6)V99    VALUE ZERO COMP-3.
+           05 WS-CC-CUT-OFF1       PIC X(01)       VALUE 'N'.
+           05 WS-DBF-MSG           PIC X(03)       VALUE 'DBF'.
+           05 WS-DB-MSG            PIC X(03)       VALUE 'DB '.
+           05 WS-CC-CONTROL-NR-DISP.
+              10 WS-CC-CONTROL-DD  PIC 9(2).
+              10 WS-CC-CONTROL-NR  PIC 9(6).
+           05 WS-CC-EMPLOYEE-CHECK PIC X(5).
+           05 WS-TALLY             PIC 9(5) COMP-3.
+           05 WS-YCODE-ST-KEY.
+              10 WS-YCODE-ST       PIC X(02).
+              10 FILLER            PIC X(03)   VALUE '999'.
+           05 WS-CANADIAN-CONVERSION.
+              10 WS-CANADIAN-FIRST-TEN    PIC X(10) VALUE SPACES.
+              10 WS-UNPACK-CANADIAN       PIC 9(2)V9(8) VALUE ZEROES.
+           05 WS-CANADIAN-CHK-FLAG PIC X(1)    VALUE 'N'.
+072811     05 WS-SCM-CNTRY-LOC-SW    PIC X(02) VALUE SPACES.
+072811        88  WS-SCM-IS-IN-US              VALUE 'US'.
+072811        88  WS-SCM-IS-IN-CANADA          VALUE 'CA'.
+JS0403     05 WS-DSMSTR-RRN          PIC S9(09)    COMP SYNC.
+CP1098     05 WS-ORIG-DATE           PIC 9(7).
+CP1098     05 WS-FMT-ORIG-DATE       PIC 9(7).
+CP1098     05 WS-FMT-ORIG-CNTRL-NR   PIC 9(8).
+CP1098     05 WS-ORIG-CNTRL-NR       PIC X(6).
+CP1098     05 FILLER REDEFINES WS-ORIG-CNTRL-NR.
+CP1098        10 WS-ORIG-CNTRL-6     PIC 9(6).
+CP1098     05 FILLER REDEFINES WS-ORIG-CNTRL-NR.
+CP1098        10 WS-ORIG-CNTRL-5     PIC 9(5).
+CP1098        10 FILLER              PIC X.
+CP1098     05 FILLER REDEFINES WS-ORIG-CNTRL-NR.
+CP1098        10 WS-ORIG-CNTRL-4     PIC 9(4).
+CP1098        10 FILLER              PIC XX.
+MP0204     05 WS-NV-EXIT-FLAG        PIC X(01) VALUE 'N'.
+MP0204        88 WS-NV-EXIT-YES                VALUE 'Y'.
+MP0204     05 WS-NV-ERROR-NR         PIC 9(05) VALUE ZERO.
+MP0204     88 WS-NV-ERROR-IGNORE               VALUE 30, 31, 32, 47, 51,
+MP0204                                               65, 83, 434, 435,
+MP0204                                               436, 437, 445, 589,
+MP0204                                               590.
+
+PM0517     05 WS-FMRM-05-POF             PIC X(01)    VALUE SPACES.
+PMO517     05 WS-TOTAL-FACE-SC-POF       PIC S9(6)V99 VALUE +0.
+
+           05 WS-DRIVER-NR-KEYED-INFO.
+              10 WS-DRIVER-NR-KEYED                OCCURS 20 TIMES.
+                 15 WS-DRIVER-NR-KEYED-N  PIC 9(1).
+           05 WS-DRIVER-NR-CARD-INFO.
+              10 WS-DRIVER-NR-CARD        PIC X(1) OCCURS 20 TIMES.
+           05 WS-DRIVER-NR-VALIDATE-TABLE.
+              15 FILLER                   PIC X(03) VALUE 'QZ '.
+              15 FILLER                   PIC X(03) VALUE 'ABC'.
+              15 FILLER                   PIC X(03) VALUE 'DEF'.
+              15 FILLER                   PIC X(03) VALUE 'GHI'.
+              15 FILLER                   PIC X(03) VALUE 'JKL'.
+              15 FILLER                   PIC X(03) VALUE 'MNO'.
+              15 FILLER                   PIC X(03) VALUE 'PRS'.
+              15 FILLER                   PIC X(03) VALUE 'TUV'.
+              15 FILLER                   PIC X(03) VALUE 'WXY'.
+           05 FILLER REDEFINES WS-DRIVER-NR-VALIDATE-TABLE.
+              15 WS-DRIVER-NR-VALIDATE    PIC X(03) OCCURS 9 TIMES.
+           05 WS-AREA-STATE-TABLE-DTA.
+              15 FILLER                   PIC X(05) VALUE '403AB'.
+              15 FILLER                   PIC X(05) VALUE '604BC'.
+              15 FILLER                   PIC X(05) VALUE '204MB'.
+              15 FILLER                   PIC X(05) VALUE '506NB'.
+              15 FILLER                   PIC X(05) VALUE '709NF'.
+              15 FILLER                   PIC X(05) VALUE '902NS'.
+              15 FILLER                   PIC X(05) VALUE '807ON'.
+              15 FILLER                   PIC X(05) VALUE '519ON'.
+              15 FILLER                   PIC X(05) VALUE '705ON'.
+              15 FILLER                   PIC X(05) VALUE '613ON'.
+              15 FILLER                   PIC X(05) VALUE '416ON'.
+              15 FILLER                   PIC X(05) VALUE '905ON'.
+              15 FILLER                   PIC X(05) VALUE '902PE'.
+              15 FILLER                   PIC X(05) VALUE '514PQ'.
+              15 FILLER                   PIC X(05) VALUE '418PQ'.
+              15 FILLER                   PIC X(05) VALUE '819PQ'.
+              15 FILLER                   PIC X(05) VALUE '306SK'.
+              15 FILLER                   PIC X(03) VALUE HIGH-VALUES.
+              15 FILLER                   PIC X(02) VALUE SPACES.
+           05 FILLER REDEFINES WS-AREA-STATE-TABLE-DTA.
+              15 WS-AREA-STATE-TABLE OCCURS 18 TIMES.
+                 20 WS-AREA-STATE-AREA    PIC X(03).
+                 20 WS-AREA-STATE-ST      PIC X(02).
+
+           05 WS-PRODUCT-CODE-LIMITS.
+              10 WS-PRODUCT-LIMITS-TABLE OCCURS 36 TIMES.
+                 15 WS-PRD-MAX-DAILY      PIC S9(005) COMP-3.
+                 15 WS-PRD-ALLOW-ORIG     PIC S9(005) COMP-3.
+
+JS0604     05 WS-PRODUCT-TRANSLATION-DATA.
+              10 FILLER                   PIC X(04) VALUE '0000'.
+              10 FILLER                   PIC X(04) VALUE '0101'.
+              10 FILLER                   PIC X(04) VALUE '0202'.
+              10 FILLER                   PIC X(04) VALUE '0303'.
+              10 FILLER                   PIC X(04) VALUE '0404'.
+              10 FILLER                   PIC X(04) VALUE '0505'.
+              10 FILLER                   PIC X(04) VALUE '0606'.
+              10 FILLER                   PIC X(04) VALUE '0707'.
+              10 FILLER                   PIC X(04) VALUE '0808'.
+              10 FILLER                   PIC X(04) VALUE '0909'.
+              10 FILLER                   PIC X(04) VALUE '0A10'.
+              10 FILLER                   PIC X(04) VALUE '0B11'.
+              10 FILLER                   PIC X(04) VALUE '0C12'.
+              10 FILLER                   PIC X(04) VALUE '0D13'.
+              10 FILLER                   PIC X(04) VALUE '0E14'.
+              10 FILLER                   PIC X(04) VALUE '0F15'.
+              10 FILLER                   PIC X(04) VALUE '0G16'.
+              10 FILLER                   PIC X(04) VALUE '0H17'.
+              10 FILLER                   PIC X(04) VALUE '0I18'.
+              10 FILLER                   PIC X(04) VALUE '0J19'.
+              10 FILLER                   PIC X(04) VALUE '0K20'.
+              10 FILLER                   PIC X(04) VALUE '0L21'.
+              10 FILLER                   PIC X(04) VALUE '0M22'.
+              10 FILLER                   PIC X(04) VALUE '0N23'.
+              10 FILLER                   PIC X(04) VALUE '0O24'.
+              10 FILLER                   PIC X(04) VALUE '0P25'.
+              10 FILLER                   PIC X(04) VALUE '0Q26'.
+              10 FILLER                   PIC X(04) VALUE '0R27'.
+              10 FILLER                   PIC X(04) VALUE '0S28'.
+              10 FILLER                   PIC X(04) VALUE '0T29'.
+              10 FILLER                   PIC X(04) VALUE '0U30'.
+              10 FILLER                   PIC X(04) VALUE '0V31'.
+              10 FILLER                   PIC X(04) VALUE '0W32'.
+              10 FILLER                   PIC X(04) VALUE '0X33'.
+              10 FILLER                   PIC X(04) VALUE '0Y34'.
+              10 FILLER                   PIC X(04) VALUE '0Z35'.
+JS0604     05 FILLER REDEFINES WS-PRODUCT-TRANSLATION-DATA.
+              15 WS-PRODUCT-TRANSLATION-TABLE OCCURS 36 TIMES
+                                              INDEXED BY PTT-INDX.
+                 20 WS-PTT-ALPHA          PIC X(02).
+                 20 WS-PTT-NUM            PIC X(02).
+
+JS0206*    03 FILLER.
+      **** (WS-QUEUE-WORK-AREA) ****
+              05 QUEUE-ID-AREA.
+                 10 FILLER                PIC X(4) VALUE 'FP  '.
+                 10 QID-TRMID             PIC X(4).
+              05 WS-ITEM                  PIC 9(4) COMP VALUE 1.
+              05 WS-Q-AREA.
+MB0114           10 WS-Q-COMMAREA         PIC X(1800).
+                 10 WS-Q-UNFORMATTED      PIC X(1197).
+                 10 WS-Q-MAPLEN           PIC 9(5) COMP-3.
+
+JS0206     05 WS-STANDARD-ITEM-PURCHASED   PIC X(01).
+JS0206     05 WS-ADD-ON-APPLIES            PIC X(01).
+JS0206     05 WS-CHECK-PRODUCT-FEE         PIC X(01).
+JS0107     05 WS-HOLD-MIXED-FUEL-RATE            PIC S9(5)V99 COMP-3.
+JS0107     05 WS-HOLD-BASE-FUEL-RATE             PIC S9(5)V99 COMP-3.
+JS0107     05 WS-HOLD-DC-FEE-AMT-FUEL            PIC S9(5)V99 COMP-3.
+JS0107     05 WS-PRDCUST-HAS-BEEN-READ           PIC X(1) VALUE 'N'.
+JS0107     05 WS-PRDSCMM-HAS-BEEN-READ           PIC X(1) VALUE 'N'.
+JS0107     05 WS-PRODUCT-FEE-FOUND               PIC X(1).
+
+082008***** WORK AREA FOR LARGE TRANSACTION INTERIM (LTI) PROJ CHGS
+082008     05 WS-NO-TRANS-SPLIT-FLAG    PIC  X(01)    VALUE SPACE.
+082008     05 WS-LTI-SW                 PIC  X(01)    VALUE SPACE.
+082008       88 WS-LARGE-TRANS-SPLITS                 VALUE 'Y'.
+052311     05 WS-LTI-WITH-TAX-SW        PIC  X(01)    VALUE SPACE.
+052311       88 WS-LARGE-TRANS-WITH-TAX               VALUE 'Y'.
+052311     05 WS-LTI-TAX-SW             PIC  X(01)    VALUE SPACE.
+052311       88 WS-LARGE-TRANS-SPLITS-TAX             VALUE 'Y'.
+082008     05 WS-LTI-SW2                PIC  X(01)    VALUE SPACE.
+082008       88 WS-LTI-SC-CURRENCY                    VALUE 'S'.
+082008     05 WS-LTI-SUB1               PIC S9(03)    VALUE ZERO.
+082008       88 LTI-FIRST-PASS                        VALUE 1.
+082008       88 LTI-SECOND-PASS                       VALUE 2.
+082008     05 WS-LTI-LAST-FLAG          PIC  X(01)    VALUE SPACE.
+082008       88 LTI-LAST-PASS                         VALUE 'Y'.
+082008     05 WS-LTI-SUB2               PIC S9(01)    VALUE ZERO.
+082008     05 WS-LTI-SPLIT-COUNT        PIC S9(03)    VALUE ZERO.
+052711     05 WS-LTI-AMT-TO-ADD         PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-AMT-TO-SUBTRACT    PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-QTY-TO-ADD         PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-QTY-TO-SUBTRACT    PIC S9(05)V99 VALUE ZERO.
+052311     05 WS-LTI-TAX-RATE           PIC S9(1)V9(3) COMP-3 VALUE +0.
+052311     05 WS-LTI-TRANS-AMT          PIC S9(05)V99 VALUE ZERO.
+052311     05 WS-LTI-INIT-SPLIT-VALUE   PIC S9(05)    VALUE ZERO.
+052311     05 WS-LTI-INIT-SPLIT-NBR1    PIC S9(05)    VALUE ZERO.
+052311     05 WS-LTI-INIT-SPLIT-NBR2    PIC S9(05)    VALUE ZERO.
+052311     05 WS-LTI-INIT-SPLIT-REFER   PIC S9(05)    VALUE ZERO.
+052311     05 WS-LTI-INIT-SPLIT-OTHER   PIC S9(05)    VALUE ZERO.
+052311     05 WS-LTI-PCT-XTN-NBR1       PIC 9V999     VALUE ZERO.
+052311     05 WS-LTI-PCT-XTN-NBR2       PIC 9V999     VALUE ZERO.
+052311     05 WS-LTI-PCT-XTN-REFER      PIC 9V999     VALUE ZERO.
+052311     05 WS-LTI-PCT-XTN-OTHER      PIC 9V999     VALUE ZERO.
+082008     05 WS-LTI-WORK-AMT           PIC S9(05)V99 VALUE ZERO.
+071009     05 WS-LTI-WORK-AMT2          PIC S9(05)V99 VALUE ZERO.
+082008     05 WS-LTI-SPLIT-AMT          PIC S9(05)V99 VALUE ZERO.
+052311     05 WS-LTI-SPLIT-AMT-NBR1     PIC S9(05)V99 VALUE ZERO.
+052311     05 WS-LTI-SPLIT-AMT-NBR2     PIC S9(05)V99 VALUE ZERO.
+ED0113     05 WS-LTI-SPLIT-AMT-NBR2-HLD PIC S9(05)V99 VALUE ZERO.
+052311     05 WS-LTI-SPLIT-AMT-REFER    PIC S9(05)V99 VALUE ZERO.
+052311     05 WS-LTI-SPLIT-AMT-OTHER    PIC S9(05)V99 VALUE ZERO.
+ED0113     05 WS-LTI-SPLIT-AMT-OTHER-HLD
+ED0113                                  PIC S9(05)V99 VALUE ZERO.
+ED0113     05 WS-LTI-OVER-AMT-HLD       PIC S9(05)V99 VALUE ZERO.
+082008     05 WS-LTI-OVER-QTY           PIC S9(05)V99 VALUE ZERO.
+082008     05 WS-LTI-OVER-AMT           PIC S9(05)V99 VALUE ZERO.
+082008     05 WS-LTI-MOVE-QTY           PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-QTY-NR1      PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-QTY-NR2      PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-QTY-REF      PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-QTY-OTH      PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-QTY-NR1       PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-QTY-NR2       PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-QTY-REF       PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-QTY-OTH       PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-QTY-NR1-OTH  PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-QTY-NR2-OTH  PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-QTY-REF-OTH  PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-QTY-OTH-OTH  PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-QTY-NR1-OTH   PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-QTY-NR2-OTH   PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-QTY-REF-OTH   PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-QTY-OTH-OTH   PIC S9(05)V99 VALUE ZERO.
+082008     05 WS-LTI-MOVE-AMT           PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-AMT-TAX      PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-AMT-NR1      PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-AMT-NR2      PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-AMT-REF      PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-AMT-OTH      PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-AMT-NR1       PIC S9(07)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-AMT-NR2       PIC S9(07)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-AMT-REF       PIC S9(07)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-AMT-OTH       PIC S9(07)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-AMT-TAX-OTH  PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-AMT-NR1-OTH  PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-AMT-NR2-OTH  PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-AMT-REF-OTH  PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-TOTAL-AMT-OTH-OTH  PIC S9(05)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-AMT-NR1-OTH   PIC S9(07)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-AMT-NR2-OTH   PIC S9(07)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-AMT-REF-OTH   PIC S9(07)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-AMT-OTH-OTH   PIC S9(07)V99 VALUE ZERO.
+052711     05 WS-LTI-HOLD-AMT-TAX-OTH   PIC S9(05)V99 VALUE ZERO.
+052311     05 WS-LTI-HOLD-AMT-TAX       PIC S9(05)V99 VALUE ZERO.
+052311     05 WS-LTI-MOVE-TAX           PIC S9(05)V99 VALUE ZERO.
+082008     05 WS-LTI-PERCENT            PIC S9V9(06)  VALUE ZERO.
+082008     05 WS-PERFORM-SW             PIC  X(01)    VALUE SPACE.
+082008     05 WS-TRANS-GALLONS          PIC S9(05)V99 VALUE ZERO.
+082008     05 WS-HOLD-TRANS-GALLONS     PIC S9(05)V99 VALUE ZERO.
+082008     05 WS-COMSITE-OLD-FORMAT     PIC  X(01)    VALUE SPACE.
+082008     05 FP-0175A-FIRST-PASS-SW    PIC  X(01)    VALUE SPACE.
+082008       88 FP-0175A-FIRST-PASS                     VALUE 'Y'.
+120412     05 WS-BYPASS-LOG-DISCOUNT    PIC  X(01)    VALUE 'N'.
+082008***** THESE FLAGS ONLY USED FOR TRANSACTION CANCELLATION
+082008     05 WS-LTI-FMLOG-FOUND        PIC  X(01)    VALUE SPACE.
+082008     05 WS-LTI-HOLD-FMLOG-RRN     PIC S9(07) VALUE +0 COMP SYNC.
+CP1211     05 WS-LTI-SKIP-FMLOG-RRN     PIC S9(07) VALUE +0 COMP SYNC.
+082008     05 WS-LTI-LAST-FMLOG-RRN     PIC S9(07) VALUE +0 COMP SYNC.
+082008***** HOLD AREA FOR LARGE TRANSACTION INTERIM (LTIH)
+082008     05 WS-LTI-HOLD-AREAS.
+082008       10 WS-LTIH-FMLOG           PIC  X(2040)  VALUE SPACE.
+082008       10 WS-LTIH-CASH-AMT        PIC S9(07)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-TAX-AMT-SC      PIC S9(07)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-BILLABLE        PIC S9(05)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-NON-BILLABLE    PIC S9(05)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-CURXMN2         PIC S9(06)V99        VALUE ZERO.
+082008       10 WS-LTIH-CURXMN          PIC S9(06)V99        VALUE ZERO.
+CP1011       10 WS-LTIH-CONTROL-NR      PIC  9(07)           VALUE ZERO.
+082008       10 WS-LTIH-DRAFT-AMT       PIC  9(05)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-FP-TRANS-AMT    PIC  9(05)V99        VALUE ZERO.
+082008       10 WS-LTIH-TOTAL-REQUEST   PIC S9(06)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-TRANS-GALLONS   PIC S9(05)V99 VALUE ZERO.
+082008       10 WS-LTIH-TRANS-GALLONS2  PIC S9(05)V99 VALUE ZERO.
+082008       10 WS-LTIH-HUB             PIC S9(06)V9  VALUE ZERO.
+120412       10 WS-LTIH-SELECT-DISC     PIC S9(03)V99 COMP-3 VALUE ZERO.
+JS0618       10 WS-LTIH-TOTAL-TAX-SC    PIC S9(05)V99 COMP-3 VALUE ZERO.
+082008     05 WS-LTI-PROD-HOLD-AREAS.
+082008       10 WS-LTIH-PROD-BILLABLE   PIC S9(05)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-PROD-BILLABLE2  PIC S9(05)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-PROD-NON-BILLABLE
+082008                                  PIC S9(05)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-PROD-NON-BILLABLE2
+082008                                  PIC S9(05)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-PROD-BILLABLE-FUEL
+082008                                  PIC S9(05)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-PROD-NON-BILLABLE-FUEL
+082008                                  PIC S9(05)V99 COMP-3 VALUE ZERO.
+082008     05 WS-LTI-UIWA-AREAS.
+082008       10                         PIC  X(01)           VALUE 'N'.
+082008       10 WS-LTIH-UIWA-NR1-QTY    PIC S9(07)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-UIWA-NR1-COST   PIC S9(07)V99 COMP-3 VALUE ZERO.
+082008       10                         PIC  X(01)           VALUE 'N'.
+082008       10 WS-LTIH-UIWA-NR2-QTY    PIC S9(07)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-UIWA-NR2-COST   PIC S9(07)V99 COMP-3 VALUE ZERO.
+082008       10                         PIC  X(01)           VALUE 'N'.
+082008       10 WS-LTIH-UIWA-REF-QTY    PIC S9(07)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-UIWA-REF-COST   PIC S9(07)V99 COMP-3 VALUE ZERO.
+082008       10                         PIC  X(01)           VALUE 'N'.
+082008       10 WS-LTIH-UIWA-OTH-QTY    PIC S9(07)V99 COMP-3 VALUE ZERO.
+082008       10 WS-LTIH-UIWA-OTH-COST   PIC S9(07)V99 COMP-3 VALUE ZERO.
+082008     05 FILLER REDEFINES WS-LTI-UIWA-AREAS  OCCURS 4 TIMES.
+082008       10 WS-LTI-ZERO-FLAG        PIC  X(01).
+082008       10 WS-LTIH-UIWA-QTY        PIC S9(07)V99 COMP-3.
+082008       10 WS-LTIH-UIWA-AMT        PIC S9(07)V99 COMP-3.
+052311     05 WS-LTIH-UIWA-AMT-TAX      PIC S9(07)V99 COMP-3 VALUE ZERO.
+082008***** THE FIELDS IN THIS BLOCK ARE VALUES ON CDNCUST, SCMSTR, ETC.
+082008***** THAT NEED TO BE ALTERED DURING LARGE TRANSACTION SPLIT
+082008***** PROCESSING WITHOUT ALTERING THE ORIGINAL VALUE ON THE FILE
+082008     05 WS-LTI-FILE-DATA-AREA.
+082008       10 WS-CDN-GUAR-YN                PIC  X(01).
+082008       10 WS-CDN-ALL-HANDLING-ADD-ON    PIC S9(3)V99  COMP-3.
+082008       10 WS-CDN-ALL-HANDLING-ADD-ON-AC PIC S9(3)V99  COMP-3.
+082008       10 WS-CDN-MANUAL-ADD-ON          PIC S9V99     COMP-3.
+082008       10 WS-CDN-COST-PLUS-ADD-ON       PIC S9V99     COMP-3.
+082008       10 WS-CDN-COST-PLUS-ADD-ON-AC    PIC S9V99     COMP-3.
+082008       10 WS-SCM-CORP-REBATE-LOCATION   PIC  X(10).
+082008       10 WS-SCM-CORP-REBATE-FLAG       PIC  X(01).
+082008       10 WS-SCPM-PP-PAC-MARKUP         PIC S9(2)V999 COMP-3.
+080210***** WORK AREAS FOR IRIS/CXXCO0FC PROCESSING
+ED0810     05 WS-NOTIFY-IRIS-FL          PIC  X(01)  VALUE 'Y'.
+080210     05 WS-CIX-RESP-REQUESTED      PIC  X(01)  VALUE 'N'.
+080210     05 WS-CIX-MESSAGE-TYPE        PIC  X(04)  VALUE SPACE.
+080210     05 WS-CIX-CARD-NR             PIC  9(16)  VALUE ZERO.
+080210     05 WS-COMPANY-STANDARD-ID     PIC  9(05)  VALUE ZERO.
+080210     05 WS-POS-ERROR-NUMBER        PIC  9(05)  VALUE ZERO.
+080210     05 WS-AMOUNT-NO-DECIMAL-06    PIC  9(06)  VALUE ZERO.
+080210     05 WS-AMOUNT-NO-DECIMAL-09    PIC  9(09)  VALUE ZERO.
+080210     05 WS-AMOUNT-NO-DECIMAL-12    PIC  9(12)  VALUE ZERO.
+BW0211     05 WS-CODES-AMOUNT.
+BW0211        10 WS-CODES-AMT            PIC 9(7)V99 VALUE ZERO.
+MB0912     05 WS-TAX-ADDED               PIC  X(01)  VALUE 'N'.
+061815     05 WS-SAVE-UIWA-NR1-COST-SC   PIC S9(07)V99 COMP-3 VALUE +0.
+061815     05 WS-SAVE-UIWA-NR2-COST-SC   PIC S9(07)V99 COMP-3 VALUE +0.
+061815     05 WS-SAVE-UIWA-REF-COST-SC   PIC S9(07)V99 COMP-3 VALUE +0.
+061815     05 WS-SAVE-UIWA-OTH-COST-SC   PIC S9(07)V99 COMP-3 VALUE +0.
+061815     05 WS-SAVE-UIWA-OIL-COST-SC   PIC S9(07)V99 COMP-3 VALUE +0.
+
+SB0315     05 WS-FUELUP-WORK-AREA.
+SB0315        10 WS-FUELUP-SW             PIC X(01) VALUE ' '.
+SB0315           88 FUELUP-YES                      VALUE 'Y'.
+SB0315           88 FUELUP-NO                       VALUE 'N'.
+SB0315        10 FUELUP-PRICE-DIFF        PIC S9(5)V99  COMP-3 VALUE +0.
+SB0315        10 FUELUP-CASH-PRICE        PIC S9(2)V999 COMP-3 VALUE +0.
+SB0315        10 FUELUP-RETAIN-FEE        PIC S9(5)V99  COMP-3 VALUE +0.
+SB0315        10 FUELUP-SC-TR-TRACTOR-COST
+SB0315                                    PIC S9(7)V99  COMP-3 VALUE +0.
+SB0315        10 FUELUP-NEW-TRACTOR-COST  PIC S9(7)V99  COMP-3 VALUE +0.
+
+DR0321     05 WS-CVC3-PASSED-FLAG           PIC X     VALUE 'N'.
+DR0321        88 CVC3-WAS-PASSED                      VALUE 'Y'.
+DR0321     05 WS-SAVE-SRVC-CODE             PIC 9(03) VALUE ZEROES.
+DR0321     05 WS-ATMW-DE48-71-ON-BEHALF     PIC X(40).
+DR0321     05 FILLER REDEFINES WS-ATMW-DE48-71-ON-BEHALF.
+DR0321        10 WS-ATMW-DE48-71 OCCURS 10 TIMES
+DR0321                           INDEXED BY WS-DE48-71-INDX.
+DR0321           15  WS-ATMW-DE48-71-SF1    PIC X(02).
+DR0321           15  WS-ATMW-DE48-71-SF2    PIC X(01).
+DR0321           15  WS-ATMW-DE48-71-SF3    PIC X(01).
+DR0121     05 WS-SWIPED-DATA.
+DR0121        10 WS-SWIPED-CARD             PIC 9(16).
+SD0421        10 WS-SWIPED-OR-KEYED         PIC X.
+SD0421           88 SWIPED-TRANSACTION   VALUE '='.
+DR0121        10 WS-SWIPED-EXP-DT-YYMM      PIC X(04).
+DR0121        10 WS-SWIPED-SRVC-CD          PIC X(03).
+DR0121        10 WS-PROP-SWIPED-AREA.
+DR0121           15                         PIC X.
+DR0121           15 WS-PROP-SWIPED-CVC1     PIC X(03).
+DR0121           15                         PIC X(12).
+DR0121        10 WS-MC-SWIPED-AREA
+DR0121            REDEFINES WS-PROP-SWIPED-AREA.
+DR0121           15 WS-MC-SWIPED-CVC1       PIC X(03).
+DR0121           15                         PIC X(13).
+DR0121     05 WS-ATMW-TRACK2-DATA.
+DR0121        10 WS-ATM-TRACK2-CARD         PIC 9(16).
+DR0121        10                            PIC X.
+DR0121        10 WS-ATM-TRACK2-EXP-DT-YYMM  PIC X(04).
+DR0121        10 WS-ATM-TRACK2-SERVICE-CODE PIC X(03).
+DR0121        10 WS-PROP-ATM-TRACK2-AREA.
+DR0121           15                         PIC X.
+DR0121           15 WS-PROP-ATM-TRACK2-CVC1 PIC X(03).
+DR0121           15                         PIC X(11).
+DR0121        10 WS-MC-ATM-TRACK2-AREA
+DR0121            REDEFINES WS-PROP-ATM-TRACK2-AREA.
+DR0121           15 WS-MC-ATM-TRACK2-CVC1   PIC X(03).
+DR0121           15                         PIC X(12).
+SD0122     05 WS-SWIPED-CARD-20             PIC X(20).
+MP0221     05 WS-CVC1-FLAG                  PIC X(1) VALUE 'N'.
+MP0221        88 CVC1-NOT-FOUND VALUE 'Y'.
+MP0221     05 WS-CODES-CVC-DECLINE-FLG           PIC X(1) VALUE 'N'.
+MP0221        88 CODES-CVC-DECLINE VALUE 'Y'.
+SD0122     05 WS-CODES-CVC-TIME-LIMIT      PIC 9(09).
+
+       01  WS-OTHER-WORK-AREA.
+091509     03 WS-CREDITL-READ-SW        PIC  X(01)    VALUE SPACE.
+091509     03 WS-CREDITL-AMOUNTS.
+091509       10  WS-CREDIT-LIMIT          PIC S9(12)     VALUE ZERO.
+091509       10  WS-UPDATE-OR-AR-BAL      PIC S9(09)V99  VALUE ZERO.
+091509       10  WS-CASH-RECEIVED         PIC S9(09)V99  VALUE ZERO.
+091509       10  WS-CURRENT-DAY           PIC S9(09)V99  VALUE ZERO.
+080210     03 WS-CL-CO-CD              PIC  X(05)     VALUE SPACES.
+102810     03 WS-USE-FLEET-LIMITS      PIC  X(01)     VALUE 'N'.
+102810     03 WS-XCPL-PROD             PIC  X(05)     VALUE '00000'.
+SB1115     03 WS-XCPL-PROD-R REDEFINES WS-XCPL-PROD.
+SB1115        05 FILLER                PIC XX.
+SB1115        05 WS-XCLP-PROD-NUM      PIC 99.
+SB1115        05 FILLER                PIC X.
+102810     03 WS-PRE-AUTH-CODES        PIC  X(01)     VALUE 'N'.
+102810     03 WS-SUB-PROD-FIND         PIC  X(01)     VALUE 'N'.
+102810     03 WS-PAC-SUB               PIC  9(02)     VALUE ZERO.
+102810     03 WS-DFLT-NR2-SUB-PROD-IN  PIC  X(15)     VALUE SPACES.
+102810     03 WS-DFLT-NR1-SUB-PROD-IN  PIC  X(15)     VALUE SPACES.
+102810     03 WS-DFLT-REF-SUB-PROD-IN  PIC  X(15)     VALUE SPACES.
+102810     03 WS-DFLT-OTH-SUB-PROD-IN  PIC  X(15)     VALUE SPACES.
+102810     03 WS-CHK-HUB               PIC  X(01)     VALUE SPACE.
+102810     03 WS-CURR-MIN              PIC S9(04)     VALUE ZERO.
+041112     03 WS-CURR-MIN-WORK         PIC S9(04)     VALUE ZERO.
+041112     03 WS-SETUP-XCPRODC-DONE    PIC  X(01)     VALUE SPACE.
+041112     03 WS-PURC-TIME-UNPACK      PIC  9(05)     VALUE ZERO.
+102810     03 WS-COMP-MIN              PIC S9(04)     VALUE ZERO.
+102810     03 WS-ELAP-MIN              PIC S9(04)     VALUE ZERO.
+102810     03 WS-DSCARD-DT             PIC  9(07)     VALUE ZERO.
+102810     03 WS-DSCARD-TM             PIC  9(07)     VALUE ZERO.
+102810     03 WS-DSCARD-CMPR-X         PIC  X(04).
+102810     03 WS-DSCARD-CMPR REDEFINES WS-DSCARD-CMPR-X
+102810                                 PIC S9(07) COMP-3.
+102810     03 WS-DSCARD-END            PIC  X(01)     VALUE SPACE.
+AA0921*    03 WS-NBC-KEY               PIC  X(29)     VALUE SPACES.
+AA0921     03 WS-NBC-KEY               PIC  X(35)     VALUE SPACES.
+102810     03 WS-MULTI-PART-PURCHASE   PIC  X(01)     VALUE SPACE.
+102810     03 WS-BYPASS-CARD-NETW-UPDT PIC  X(01)     VALUE SPACE.
+102810     03 WS-FLEET-LIMIT-CSH-AVAIL PIC  X(01)     VALUE SPACE.
+102810     03 WS-FLEET-LIMIT-CSH-AMT   PIC S9(07)V99  VALUE ZERO.
+102810     03 WS-AVAIL-AMT-OIL         PIC S9(03)V99  VALUE ZERO.
+102810     03 WS-NO-FUEL-FEE-FLAG      PIC X(01)      VALUE SPACE.
+102810        88 WS-NO-FUEL-FEE                       VALUE 'Y'.
+102810     03 WS-FORCE-POST-FROM-PRE-AUTH  PIC X(01)  VALUE SPACE.
+102810        88 FORCE-POST-FROM-PRE-AUTH             VALUE 'Y'.
+102810     03 WS-POPULATED-SW.
+102810       10 WS-MAX-NR2-POPULATED     PIC  X(01)   VALUE SPACE.
+102810       10 WS-MAX-NR1-POPULATED     PIC  X(01)   VALUE SPACE.
+102810       10 WS-MAX-REF-POPULATED     PIC  X(01)   VALUE SPACE.
+102810       10 WS-MAX-OTH-POPULATED     PIC  X(01)   VALUE SPACE.
+ED0213     03 WS-RESET-LAST-QTY-RFID   PIC  X(01)     VALUE 'N'.
+MB1013     03 WS-PROPRIETARY-CARD      PIC  X         VALUE 'N'.
+MB1113     03 WS-EXP-DATE-ERR          PIC  X         VALUE 'N'.
+           03 WS-THIS-BE-A-RESTORE     PIC  X(01)     VALUE 'N'.
+           03 WS-COMDATA-COMPLETE-READ PIC  X(01)     VALUE 'N'.
+           03 WS-NR1-COST              PIC 99V9(07) COMP-3 VALUE ZERO.
+           03 WS-NR2-COST              PIC 99V9(07) COMP-3 VALUE ZERO.
+           03 WS-REF-COST              PIC 99V9(07) COMP-3 VALUE ZERO.
+CP0506     03 WS-REF-RACK-PPG          PIC 99V9(07) COMP-3 VALUE ZERO.
+SD0219* THESE ARE USED TO HOLD THE PPU PRICES AND COST AMOUNTS SO
+SD0219* THAT TSFMO0CT CAN BE USED TO BACKOUT CANADIAN TAXES FROM
+SD0219* NET PRICES. UNFORTUNATELY CT ONLY OPERATES ON THE UIWA BALANCES
+SD0219     03 WS-NR1-PPU-HOLD            PIC S9(02)V9(3)    COMP-3.
+SD0219     03 WS-NR1-COST-HOLD           PIC S9(07)V99      COMP-3.
+SD0219     03 WS-NR2-PPU-HOLD            PIC S9(02)V9(3)    COMP-3.
+SD0219     03 WS-NR2-COST-HOLD           PIC S9(07)V99      COMP-3.
+SD0219     03 WS-REF-PPU-HOLD            PIC S9(02)V9(3)    COMP-3.
+SD0219     03 WS-REF-COST-HOLD           PIC S9(07)V99      COMP-3.
+SD0219     03 WS-OTH-PPU-HOLD            PIC S9(02)V9(3)    COMP-3.
+SD0219     03 WS-OTH-COST-HOLD           PIC S9(07)V99      COMP-3.
+090310***** CHG TO PIC 9(2) TO HANDLE ADDITIONAL COMPUTATION LOGIC
+           03 WS-WEEKDAY               PIC 9(2) VALUE ZERO.
+           03 WS-WEEKDAY-FOUND         PIC X(1).
+090310     03 WS-CCPP-INDEX            PIC 9(2) VALUE ZERO.
+090310     03 WS-CPC-CALC-DAYS         PIC 9(6) VALUE ZERO.
+MB0714     03 X-WEEK                   PIC S9(4)    COMP.
+MB0714     03 X-WEEK2                  PIC S9(4)    COMP.
+MB0714     03 X-DAY                    PIC S9(4)    COMP.
+MB0714     03 WS-WEEKS                 PIC S9(4)    COMP.
+MB0714     03 WS-WEEK-FOUND            PIC X    VALUE 'N'.
+MB0714     03 WS-FMRACKH-FOUND         PIC X    VALUE 'N'.
+MB0714     03 WS-FOUND-ON-FMRACK       PIC X    VALUE 'N'.
+MB0714     03 WS-WEEK-REMAINDER        PIC 99   VALUE ZERO.
+MB0714     03 WS-WHICH-DAY             PIC 99   VALUE ZERO.
+MB0714     03 WS-WORK-RPDT             PIC X(6).
+MB0714     03 WS-WORK-FPDT             PIC X(6).
+           03 WS-INDEX                 PIC 9(2).
+           03 WS-INDEX2                PIC 9(2).
+JS0298     03 WS-INDEX3                PIC 9(2).
+           03 WS-WORK-DATE             PIC 9(7).
+           03 WS-DAYS-TABLE            PIC 9(5) OCCURS 7 TIMES.
+           03 WS-RACK-FLAG             PIC X(1).
+           03 WS-CHECK-NR              PIC 9(9).
+           03 FILLER REDEFINES WS-CHECK-NR.
+              05 WS-CHECK-NR-1         PIC X(1).
+              05 FILLER                PIC X(8).
+           03 WS-REQUEST-SETTLE-FEES PIC X(1)          VALUE 'N'.
+           03 WS-HOLD-CHECK-NR     PIC 9(10)           VALUE ZERO.
+           03 WS-HOLD-PPG          PIC S99V999 COMP-3  VALUE +0.
+           03 INDX                 PIC S9999 COMP SYNC VALUE +0.
+           03 FILLER               REDEFINES INDX.
+             05 FILLER             PIC X.
+             05 INDX-LO            PIC X.
+           03 INDX-1               PIC S9999 COMP SYNC VALUE +0.
+           03 INDX-2               PIC S9999 COMP SYNC VALUE +0.
+MP1208     03 INDX-3               PIC S9999 COMP SYNC VALUE +0.
+           03 MOD10-SL             PIC S999 COMP-3 VALUE +0.
+082008     03 WS-DISC              PIC S9(5)V99.
+082008     03 WS-DISC-R1           REDEFINES WS-DISC PIC S999V9999.
+           03 FILLER               REDEFINES WS-DISC.
+082008        05 FILLER             PIC X(5).
+              05 WS-DISC-DECIMAL    PIC S99.
+082008     03 WS-CDN-DISC          PIC S9(5)V99.
+           03 WS-CDN-DISC-DEC      PIC S99.
+082008     03 WS-DISC-AMT          PIC S9(5)V99.
+082008     03 FILLER               REDEFINES WS-DISC-AMT.
+082008        05                     PIC XX.
+082008        05 WS-DISC-AMT-R       PIC S9(05).
+082008     03 WS-DISC-AMT-SAVE     PIC S9(5)V99.
+CP0400     03 WS-EXTRA-AMT         PIC S9(7)V99 COMP-3 VALUE +0.
+           03 WS-TSN-PRICE-CHANGE  PIC X VALUE 'P'.
+             88 THIS-BE-A-TS-PRICE-CHANGE VALUE 'P'.
+           03 SAVE-BY-GRACE-FLAG   PIC X VALUE SPACES.
+      ****   88 THIS-OVERAGE-SAVED-BY-GRACE VALUE 'O'.
+           03 SAVE-ZON-VER-FLAG    PIC X VALUE SPACES.
+           03 WS-ID-NR.
+              05 WS-ID-NR-NUM       PIC  9(7).
+              05 WS-ID-NR-NUM-R     REDEFINES WS-ID-NR-NUM.
+                 07 WS-ID-CHAR       PIC  9
+                                     OCCURS 7 TIMES
+                                     INDEXED BY ID-INDX.
+              05 WS-ID-NR-CK-DIG    PIC  9.
+           03 FILLER.
+              05 WS-CKD-TOTAL       PIC  999.
+              05 FILLER             REDEFINES WS-CKD-TOTAL.
+                 07 FILLER           PIC XX.
+                 07 WS-CKD-TOTAL-LO  PIC  9.
+              05 WS-CKD-CALCULATED  PIC  9.
+              05 WS-CKD-MULT-BY-2   PIC  99.
+              05 FILLER             REDEFINES WS-CKD-MULT-BY-2.
+                 07 WS-CKD-HI-ORDER  PIC  9.
+                 07 WS-CKD-LO-ORDER  PIC  9.
+           03 WS-PRM-CARD.
+              05 WS-PRM-CARD-PREFIX PIC X(6)  VALUE ZEROES.
+              05 WS-PRM-CARD-BASE-A.
+                 07 FILLER           PIC X(9) VALUE ZEROES.
+                 07 WS-PRM-CARD-CKD  PIC X    VALUE ZEROES.
+              05 FILLER REDEFINES WS-PRM-CARD-BASE-A.
+                 07 WS-PRM-CARD-NUM  PIC 9(10).
+           03 FILLER               REDEFINES WS-PRM-CARD.
+              05 WS-PRM-CARD-NR     PIC 9(15).
+              05 FILLER             PIC X.
+           03 WS-PRM-CARD-N REDEFINES WS-PRM-CARD PIC 9(16).
+           03 WS-ENQ-CARD-NR       PIC 9(15)        VALUE ZEROES.
+           03 WS-DATE-MDY          PIC 9(6).
+           03 FILLER        REDEFINES WS-DATE-MDY.
+              05 WS-DATE-MM        PIC 99.
+              05 WS-DATE-DD        PIC 99.
+              05 WS-DATE-YY        PIC 99.
+           03 WS-CALC-DATE         PIC 9(5).
+           03 FILLER REDEFINES WS-CALC-DATE.
+              05 WS-CALC-YEAR      PIC 9(2).
+              05 WS-CALC-DDD       PIC 9(3).
+SB0315     03 WS-CALC-DAYS         PIC 9(6) VALUE ZEROES.
+SB0217     03 WS-RESET-DAILY       PIC X(7) VALUE '1111111'.
+           03 WS-PPG-VAR           PIC S9(3)V999 COMP-3.
+           03 WS-TAX-TRIED-VAR     PIC S9(3)V999 COMP-3.
+           03 WS-TAX-TRIED         PIC X(1) VALUE 'N'.
+           03 WS-TAX-PPG-HOLD      PIC 9V999 VALUE ZEROES.
+           03 HOLD-INP-PRICE-GALLON PIC S9(3)V999 COMP-3 VALUE +0.
+
+           03 LEASEWAY-TRAN-FLAG   PIC X   VALUE 'N'.
+      ****   88 THIS-IS-LEASEWAY           VALUE 'Y'.
+           03 LEASEWAY-CARD.
+              05 FILLER.
+                 07 LC-ACCT-NR     PIC X(9).
+                 07 FILLER         PIC X.
+              05 LC-CARD-NR        PIC X(6).
+           03 LS-DLXF-KEY.
+              05 FILLER               PIC XX    VALUE 'LS'.
+              05 FILLER.
+                 07 LDK-ACCT-NR       PIC X(9).
+                 07 LDK-CARD-NR       PIC X(6).
+              05 FILLER               PIC X(5)   VALUE SPACES.
+           03 WS-PRM-LAST-DATE-USED   PIC S9(5)  VALUE +0.
+           03 WS-PRM-USED             PIC S9(5)V99  VALUE +0.
+           03 WS-PRM-INITIAL          PIC S9(5)V99  VALUE +0.
+           03 WS-CHARGE-RATE          PIC S9(5)V99  VALUE +0.
+           03 WS-SUBTRACT-DISCOUNT    PIC S9(5)V99  VALUE +0.
+           03 SAVE-REBATE-DISCOUNT-AMT    PIC S9(5)V99  VALUE +0.
+           03 WS-HOLD-RATE            PIC S9(5)V99  VALUE +0.
+           03 HLD-PURC-ONE-TIME       PIC S9(5)V99 COMP-3 VALUE +0.
+           03 HLD-PURC-ONE-TIME-PRI   PIC S9(5)V99 COMP-3 VALUE +0.
+           03 HLD-PURC-ONE-TIME-SEC   PIC S9(5)V99 COMP-3 VALUE +0.
+           03 HLD-CASH-ONE-TIME       PIC S9(5)V99 COMP-3 VALUE +0.
+           03 HLD-CASH-ONE-TIME-PRI   PIC S9(5)V99 COMP-3 VALUE +0.
+           03 HLD-CASH-ONE-TIME-SEC   PIC S9(5)V99 COMP-3 VALUE +0.
+           03 HLD-CASH-1TIME          PIC S9(5)V99 COMP-3 VALUE +0.
+           03 HLD-PRM-PURC-INITIAL    PIC S9(5)V99 COMP-3 VALUE +0.
+           03 HLD-PRM-CASH-INITIAL    PIC S9(5)V99 COMP-3 VALUE +0.
+           03 WS-TOTAL-PURC-AMOUNT    PIC S9(5)V99 COMP-3 VALUE +0.
+           03 WS-TOTAL-CASH-AMOUNT    PIC S9(5)V99 COMP-3 VALUE +0.
+           03 HOLD-FP-LAST-TRANSACTION-NR   PIC S9(9) COMP-3.
+           03 HOLD-FP-DATE-LAST-TRANS     PIC S9(5) COMP-3.
+           03 HOLD-FP-TIME-LAST-TRANS     PIC S9(6) COMP-3.
+           03 HOLD-BALLIM-FLAG        PIC X         VALUE SPACE.
+           03 HOLD-EIBTRNID           PIC X(4).
+           03 WS-PACKED-CHECK         PIC S9(9) COMP-3 VALUE +0.
+           03 WS-DRAFT-RECD           PIC X(159).
+           03 WS-EXPRESS-AVAILABLE    PIC S9(6)V99.
+           03 WS-PICKUP-RATE          PIC S9(3)V99.
+           03 VR-VALIDATE-CHECK       PIC 9(10).
+           03 FILLER REDEFINES VR-VALIDATE-CHECK.
+              05 VR-FIRST-DIGIT       PIC 9.
+              05 FILLER               PIC 9(9).
+           03 FILLER REDEFINES VR-VALIDATE-CHECK.
+              05 VR-FIRST-NINE        PIC 9(9).
+              05 VR-CHECK-DIGIT       PIC 9.
+           03 FILLER REDEFINES VR-VALIDATE-CHECK.
+              05 VR-FIRST-FOUR        PIC 9(4).
+              05 FILLER               PIC 9(6).
+           03 WS-CHECK-DIGIT          PIC 9.
+           03 WS-CHECK-RESULT         PIC 9(9).
+           03 WS-FMDL-CUST-ID-FIXED   PIC X(10).
+           03 RETURN-CDE              PIC X.
+           03 DATA-LEN                PIC S99  COMP   VALUE +2.
+           03 WS-REFERENCE-NR      PIC 9(9).
+           03 FILLER            REDEFINES WS-REFERENCE-NR.
+              05 WS-REFERENCE-DD   PIC 99.
+              05 WS-REFERENCE-CTL  PIC 9(7).
+           03 WS-REF-NINE-NR.
+              05 WS-REF-NINE-DD    PIC 99.
+              05 WS-REF-NINE-CTL   PIC 9(7).
+           03 WS-REF-NINE-NR-R REDEFINES WS-REF-NINE-NR   PIC 9(9).
+           03 OLD-TRANS-NR.
+              05 OLD-TRANS-DD       PIC 99.
+              05 OLD-TRANS-CTL-NR   PIC 9(5).
+           03 WS-PHONE-WORK.
+               05  WS-PHONE-AREA-CODE  PIC 9(3).
+               05  WS-PHONE-PREFIX     PIC 9(3).
+               05  WS-PHONE-NUMBER     PIC 9(4).
+           03  WS-BINARY-FIELD         PIC S9(4)   COMP SYNC VALUE +0.
+           03  FILLER  REDEFINES       WS-BINARY-FIELD.
+               05  FILLER              PIC X.
+               05  WS-BINARY-LOW       PIC X.
+           03 WS-TSCODE.
+              05 WS-TS-ALP         PIC XX.
+              05 WS-TS-NUM         PIC 999.
+           03 WS-TSCODE-COMP       PIC X(10).
+           03 WS-PRM-RESET-FLAGS   PIC 9(7).
+           03 WS-RESET-FLAG REDEFINES WS-PRM-RESET-FLAGS
+                                   PIC X
+                                   OCCURS 7 TIMES.
+MN0905     03 WS-TOTAL-PRICE       PIC S9(5)V99.
+082008     03 WS-DEVIATION         PIC S9(5)V999.
+           03 WS-PERCENTAGES       PIC S9(9) VALUE +0.
+           03 FILLER               REDEFINES WS-PERCENTAGES.
+             05 WS-TOTAL-PRCNTAGE  PIC S999V99.
+             05 WS-CDN-PRCNTAGE    PIC S99V99.
+           03 WS-DRVNM.
+             05 WS-DRVN PIC X OCCURS 8 TIMES INDEXED BY DRV-INDX.
+           03 WS-CURR-DAY-TOTAL    PIC S9(6)V99 VALUE +0 COMP-3.
+           03 WS-CSTTL             PIC S9(6)V99 VALUE +0.
+           03 WS-CTR1              PIC S9(7) VALUE +0.
+           03 SAVE-PCTUP           PIC SV99 VALUE ZERO.
+           03 WRK-VARIANCE         PIC 99V999 COMP-3 VALUE 0.
+           03 WRK-VARIANCE2        PIC 99V999 COMP-3 VALUE 0.
+           03 WS-PPG-TAX-VAR       PIC SV9(5) COMP-3 VALUE ZEROES.
+           03 OCR-FLAG             PIC S9 VALUE +0.
+           03 WS-PHONENRX.
+              05 WS-PHONENR        PIC 9(10).
+           03 FILLER REDEFINES WS-PHONENRX.
+              05 WS-PHONENR-AREA   PIC X(03).
+              05 FILLER            PIC X(07).
+           03 LTR-VALUE            PIC S9(5) VALUE +0.
+           03 CURRENT-TIME-IN-SECONDS PIC S9(9) COMP-3.
+           03 NON-PROD-FLAG        PIC X VALUE ' '.
+             88 NON-PRODUCTION-REQUEST VALUE 'N'.
+           03 PGRM-FUNCTION        PIC 9999 VALUE 0.
+              88 PGRM-FUNCTION-CASH-ONLY    VALUE 0000.
+              88 PGRM-FUNCTION-OIL-ONLY     VALUE 0001.
+              88 PGRM-FUNCTION-PRODUCT-ONLY VALUE 1000.
+           03 FILLER               REDEFINES PGRM-FUNCTION.
+             05 PRODUCT-PURCHASE    PIC 9.
+             05 TRAILER-PURCHASE    PIC 9.
+             05 TRACTOR-PURCHASE    PIC 9.
+             05 OIL-PURCHASE        PIC 9.
+062209     03 GROCERY-PURCHASE    PIC 9(01) VALUE ZERO.
+           03 GOLD-OK-FLAG        PIC X VALUE SPACES.
+              88 GOLD-OK  VALUE 'G'.
+           03 ERROR-FLAG          PIC X VALUE SPACE.
+             88 THERE-WAS-AN-ERROR VALUE '*'.
+           03 CP-ERROR-FLAG       PIC X VALUE SPACE.
+           03 ERROR-TYPE          PIC X(39) VALUE SPACES.
+           03 SAVE-XTN-FEE        PIC S9(5)V99 COMP-3 VALUE +0.
+           03 SAVE-XCS-SETTLE-FEE PIC S9(5)V99 COMP-3 VALUE +0.
+           03 SAVE-EQUIP-FEE      PIC S9(5)V99 COMP-3 VALUE +0.
+           03 SAVE-SC-FEE         PIC S9(5)V99 COMP-3 VALUE +0.
+           03 SAVE-HEADER-FLAG    PIC X               VALUE 'N'.
+              88 THIS-IS-A-SDR-HEADER-2 VALUE 'Y'.
+           03 SAVE-COUNT          PIC S9(3) COMP-3 VALUE +0.
+           03 SAVE-AMOUNT         PIC S9(7)V99 COMP-3 VALUE +0.
+           03 XCS-SETTLE-MSG.
+              05 FILLER           PIC X(5) VALUE 'STL #'.
+              05 XCS-SETTLE-COUNT PIC ZZ9.
+           03 AMOUNT-TO-SETTLE    PIC S9(7)V99 COMP-3 VALUE +0.
+           03 PRODUCT-TOTAL       PIC S9(7)V99 COMP-3 VALUE +0.
+           03 PRODUCT-TOTAL2      PIC S9(7)V99 COMP-3 VALUE +0.
+           03 WS-PO-PRODUCT-TOTAL PIC S9(7)V99 COMP-3 VALUE +0.
+           03 PRODUCT-AMOUNT      PIC S9(7)V99 COMP-3 VALUE +0.
+           03 CURRENT-DAY-PROD-TOTAL PIC S9(7)V99 COMP-3 VALUE +0.
+           03 WS-DAY              PIC 9.
+           03 PD-YYDDD            PIC 9(5).
+           03 CHK-DAY             PIC 9.
+           03 PRMLOG-LENGTH       PIC S999 COMP VALUE +352.
+           03 CURRENT-DAY         PIC 9.
+           03 ELAPSED-DAYS        PIC  9(5) COMP-3.
+           03 REL-CUR-DAY         PIC S9(3) COMP-3.
+           03 REL-LAST-DAY        PIC S9(3) COMP-3.
+           03 WS-YTD-GALLONS       PIC S9(9)V99 COMP-3.
+           03 WS-YTD-FUEL-TOTAL    PIC S9(7)V99 COMP-3.
+           03 READ-ACCT-FLAG      PIC X   VALUE 'Y'.
+              88 I-NEED-TO-READ-ACCT      VALUE 'Y'.
+           03 READ-CUST-FLAG      PIC X   VALUE 'Y'.
+              88 I-NEED-TO-READ-CUST      VALUE 'Y'.
+           03 WS-RESET-ONE-TIME-PURC-FLAG PIC X(1) VALUE 'Y'.
+              88 WS-RESET-ONE-TIME-PURC            VALUE 'Y'.
+           03 WS-RESET-ONE-TIME-CASH-FLAG PIC X(1) VALUE 'Y'.
+              88 WS-RESET-ONE-TIME-CASH            VALUE 'Y'.
+SB0513     03 WS-PRMINFO-WRITE-SW         PIC X    VALUE ' '.
+SB0513        88 PRMINFO-WRITE                     VALUE 'Y'.
+SB0513     03 WS-PRMINFO-REWRITE-SW       PIC X    VALUE ' '.
+SB0513        88 PRMINFO-REWRITE                   VALUE 'Y'.
+SB0713     03 WS-SAVE-DIESEL-LIMIT        PIC S9(5) COMP-3.
+SB0713     03 WS-SAVE-REEFER-LIMIT        PIC S9(5) COMP-3.
+           03 HOLD-TRIP-NUMBER    PIC X(10).
+SD0719     03 HOLD-TRIP-NUMBER-2  PIC X(10).
+SD0719     03 HOLD-TRIP-NUMBER-3  PIC X(10).
+           03 HOLD-TRIP-NUMBER-I  PIC X(10).
+           03 WORK-TRIP-EDIT.
+              05 TRIP-EDIT-CHAR PIC X OCCURS 10 TIMES.
+           03 WORK-EDIT-EDIT.
+              05 EDIT-EDIT-CHAR PIC X OCCURS 10 TIMES.
+           03 WORK-INDEX         PIC 99    VALUE ZEROES.
+           03 CANCEL-FLAG        PIC X     VALUE 'N'.
+082008     03 WS-CONTINUE-CANCEL PIC X     VALUE SPACE.
+           03 WS-NETW-OK         PIC X     VALUE 'N'.
+           03 WS-TOTAL-OTHER     PIC S9(7)V99  VALUE +0.
+           03 SC-HOLD-AREA       PIC X(1021).
+           03 SCFUELP-STATUS-BYTE PIC S999 COMP-3 VALUE +0.
+             88 SCFUELP-NOT-FOUND VALUE +1.
+           03 WRK-PO-PRODUCT-CODE PIC XX.
+           03 FILLER                REDEFINES WRK-PO-PRODUCT-CODE.
+              05 WRK-PO-PROD-CODE-1 PIC X.
+              05 WRK-PO-PROD-CODE-2 PIC X.
+           03 FILLER                REDEFINES WRK-PO-PRODUCT-CODE.
+              05 WRK-PO-PROD-N    PIC 99.
+CP0807     03 READY-TO-UPDATE-UNITMST   PIC X VALUE 'N'.
+      **** (CANADIAN WORK FIELDS) ****
+           03 FILLER.
+061212******** PICS CHANGED FROM V99 TO V9(5)
+061212        05 WS-CANADIAN-DOLLARS    PIC S9(9)V9(5) VALUE ZEROS.
+061212        05 WS-US-DOLLARS          PIC S9(9)V9(5) VALUE ZEROS.
+              05 WS-GALLONS             PIC S9(5)V999 VALUE ZEROS.
+              05 WS-AMOUNT              PIC S9(5)V999 VALUE ZEROS.
+              05 WS-LITERS              PIC S9(5)V999 VALUE ZEROS.
+              05 WS-QTS                 PIC  9(2)     VALUE ZEROS.
+              05 WS-PPG                 PIC 9(3)V999  VALUE ZEROES.
+              05 WS-PPL                 PIC 9(3)V999  VALUE ZEROES.
+              05 HLD-EXPECTED-AMOUNT    PIC S9(7)V99  VALUE ZEROS.
+              05 QUART-TO-LITER-RATE    PIC 9V9(6) VALUE 0.946332.
+              05 LITER-TO-QUART-RATE    PIC 9V9(6) VALUE 1.056712.
+              05 GALLON-TO-LITER-RATE   PIC 9V9(6) VALUE 3.785329.
+              05 LITER-TO-GALLON-RATE   PIC 9V9(6) VALUE 0.264177.
+              05 LIMITS-ALTERED-FOR-PO  PIC X      VALUE SPACES.
+              05 US-TO-CAN-RATE         PIC S9999V9(08) VALUE ZERO.
+              05 CAN-TO-US-RATE         PIC S9999V9(08) VALUE ZERO.
+           03 WS-DRIVER-NR.
+              05 WS-DRIVER-NR-1-TO-5    PIC X(5).
+              05 WS-DRIVER-NR-6-TO-7    PIC X(2).
+              05 FILLER                 PIC X(9).
+           03 FMT-DRIVER-NR.
+              05 FMT-DRIVER-NR-1-TO-5   PIC X(5).
+              05 FILLER                 PIC X    VALUE '$'.
+              05 FMT-DRIVER-NR-7-TO-8   PIC X(2).
+           03 WRK-HUB-READING           PIC 9(6)V9.
+           03 FILLER            REDEFINES WRK-HUB-READING.
+              05 WRK-HUB-1ST-6          PIC X(6).
+              05 FILLER                 PIC X.
+           03 WS-SEL-DISC               PIC S9(3)V99 COMP-3.
+           03 WS-SC-REV                 PIC S9(3)V99 COMP-3.
+           03 WS-TRANS-NR               PIC 9(8).
+           03 FILLER REDEFINES WS-TRANS-NR.
+              05 WS-TRANS-ROLL          PIC 9(1).
+              05 WS-TRANS-DD            PIC 9(2).
+              05 WS-TRANS-SEQ           PIC 9(5).
+           03 WS-TRANS-NR-WORK          PIC 9(9).
+           03 FILLER REDEFINES WS-TRANS-NR-WORK.
+              05 FILLER                 PIC 9(3).
+              05 WS-TRANS-NR-WORK-ROLL  PIC 9(1).
+              05 WS-TRANS-NR-WORK-SEQ   PIC 9(5).
+           03 WRK-HHMMSS                PIC 9(6).
+           03 FILLER       REDEFINES WRK-HHMMSS.
+              05 WRK-HH                 PIC 99.
+              05 WRK-MM                 PIC 99.
+              05 FILLER                 PIC 99.
+           03 FILLER       REDEFINES WRK-HHMMSS.
+              05 WRK-HHMM               PIC 9(4).
+              05 FILLER                 PIC 99.
+           03 HLD-DELIV-TIME            PIC 9(4).
+           03 DELIV-TIME-CTR            PIC 9(3).
+           03 ITLG-RECORD.
+              05 FILLER                 PIC X(5)  VALUE 'ITRC '.
+              05 ITLG-DATA-STREAM2      PIC X(800).
+           03 WS-ITDQ-LENGTH            PIC S9(4) COMP VALUE +805.
+           03 WS-LOOP-FLAG              PIC X          VALUE 'N'.
+           03 WS-EXIT-FLAG              PIC X          VALUE 'N'.
+           03 WS-LOOP-FP-0100           PIC X          VALUE 'N'.
+           03 WS-EXIT-PPG-CHECK         PIC X          VALUE 'N'.
+           03 WS-ADD-TO-BILLABLE-FLAG   PIC X          VALUE 'N'.
+           03 WS-WORK-AMOUNT            PIC S9(7)V99 COMP-3.
+           03                           PIC X.
+              88 WS-TRI-STATE-ACCT                     VALUE 'Y'.
+              88 WS-TRI-STATE-ACCT-NOT                 VALUE 'N'.
+           03 HLD-CRR-KEY.
+              05 HLD-CRR-CUSTOMER-TYPE      PIC XX    VALUE 'CU'.
+              05 HLD-CRR-CUSTOMER-ID        PIC X(10).
+              05 HLD-CRR-SYSTEM-ID          PIC X(4)  VALUE 'FM  '.
+              05 HLD-CRR-REPORT-CODE        PIC S9(5) COMP-3 VALUE +12.
+              05 HLD-CRR-REPORT-FREQUENCY   PIC X     VALUE 'D'.
+              05 HLD-CRR-RECV-CUSTOMER-TYPE PIC XX    VALUE 'AC'.
+              05 HLD-CRR-RECV-CUSTOMER-ID   PIC X(10).
+              05 FILLER                     PIC X(3)  VALUE LOW-VALUES.
+MP0401     03 MA-CRR-KEY.
+MP0401        05 MA-CRR-CUSTOMER-TYPE       PIC XX    VALUE 'CU'.
+MP0401        05 MA-CRR-CUSTOMER-ID         PIC X(10).
+MP0401        05 MA-CRR-SYSTEM-ID           PIC X(4)  VALUE 'FM  '.
+MP0401        05 MA-CRR-REPORT-CODE         PIC S9(5) COMP-3 VALUE +85.
+MP0401        05 MA-CRR-REPORT-FREQUENCY    PIC X     VALUE 'D'.
+MP0401        05 MA-CRR-RECV-CUSTOMER-TYPE  PIC XX    VALUE 'AC'.
+MP0401        05 MA-CRR-RECV-CUSTOMER-ID    PIC X(10).
+MP0401        05 FILLER                     PIC X(3)  VALUE LOW-VALUES.
+MB0106     03 BF-CRR-KEY.
+MB0106        05 BF-CRR-CUSTOMER-TYPE       PIC XX    VALUE 'CU'.
+MB0106        05 BF-CRR-CUSTOMER-ID         PIC X(10).
+MB0106        05 BF-CRR-SYSTEM-ID           PIC X(4)  VALUE 'BF  '.
+MB0106        05 BF-CRR-REPORT-CODE         PIC S9(5) COMP-3 VALUE +3.
+MB0106        05 BF-CRR-REPORT-FREQUENCY    PIC X     VALUE 'D'.
+MB0106        05 BF-CRR-RECV-CUSTOMER-TYPE  PIC XX    VALUE 'AC'.
+MB0106        05 BF-CRR-RECV-CUSTOMER-ID    PIC X(10).
+MB0106        05 FILLER                     PIC X(3)  VALUE LOW-VALUES.
+CP0406     03 SUB-PROD-CRR-KEY.
+CP0406        05 SP-CRR-CUSTOMER-TYPE       PIC XX    VALUE 'CU'.
+CP0406        05 SP-CRR-CUSTOMER-ID         PIC X(10).
+CP0406        05 SP-CRR-SYSTEM-ID           PIC X(4)  VALUE 'FM  '.
+CP0406        05 SP-CRR-REPORT-CODE         PIC S9(5) COMP-3 VALUE +93.
+CP0406        05 SP-CRR-REPORT-FREQUENCY    PIC X     VALUE 'D'.
+CP0406        05 SP-CRR-RECV-CUSTOMER-TYPE  PIC XX    VALUE 'AC'.
+CP0406        05 SP-CRR-RECV-CUSTOMER-ID    PIC X(10).
+CP0406        05 FILLER                     PIC X(3)  VALUE LOW-VALUES.
+           03 CALC-DISCOUNT-ONLY            PIC X     VALUE SPACES.
+           03 WS-CASH-AMT-AVAIL             PIC S9(7)V99 VALUE ZEROES.
+           03 WS-TOTAL-TRACTOR-GALLONS      PIC S9(9)  VALUE ZEROES.
+           03 WS-READ-FMRELAT-SC-FLAG       PIC X      VALUE 'N'.
+           03 WS-FMRELAT-SC-REC             PIC X(750).
+           03 WS-READ-FMRELAT-CH-FLAG       PIC X      VALUE 'N'.
+           03 WS-FMRELAT-CH-REC             PIC X(750).
+           03 WS-READ-FMRELAT-CO-FLAG       PIC X      VALUE 'N'.
+           03 WS-FMRELAT-CO-REC             PIC X(750).
+           03 WS-RMR-SC-FOUND-SW            PIC 9.
+           03 WS-RMR-CH-FOUND-SW            PIC 9.
+           03 WS-RMR-CO-FOUND-SW            PIC 9.
+           03 NBC-READ-STATUS               PIC X      VALUE ' '.
+           03 HLD-NBC-KEY.
+              05 HLD-NBC-CARD-LOCATION.
+AA0921*          10 HLD-NBC-CARD-NUMBER     PIC X(10).
+AA0921           10 HLD-NBC-CARD-NUMBER     PIC X(16).
+                 10 HLD-NBC-LOCATION-CODE   PIC X(10).
+              05 HLD-NBC-DATE-ADD           PIC 9(7) COMP-3.
+              05 HLD-NBC-TIME-ADD           PIC 9(9) COMP-3.
+           03 TRAILER-HOUR-WORK-FIELDS.
+              05 WS-PREV-HOURS        PIC S9(6)V9 COMP-3 VALUE ZEROS.
+              05 WS-CURRENT-HOURS     PIC S9(6)V9 COMP-3 VALUE ZEROS.
+              05 WS-REEFER-HPG        PIC S9(6)V9 COMP-3 VALUE ZEROS.
+           03 WS-RCP-WORK-FIELDS.
+              05 WS-CHECK-RCP-INP     PIC 9(1)V9(4).
+              05 WS-CHECK-RCP-SCM     PIC 9(1)V9(4).
+              05 WS-RCP-WORK-FLD      PIC 9(1)V9(5).
+              05 WS-RCP-WORK-TAX1     PIC 9(3)V99.
+              05 WS-RCP-WORK-TAX2     PIC 9(3)V99.
+              05 WS-RCP-QST-RATE      PIC 9(1)V9(5) VALUE ZERO.
+              05 WS-RCP-GST-RATE      PIC 9(1)V9(5) VALUE ZERO.
+              05 WS-RCP-PPL           PIC 9(1)V9(5).
+JS0699     03 WS-TAX-WORK-FIELDS.
+JS0699        05 WS-TAX-QUANTITY      PIC 9(7)V99.
+JS0699        05 WS-TAX-PPL           PIC 9(3)V9(5).
+JS0699        05 WS-TAX-COST          PIC 9(7)V99.
+JS0699        05 WS-TAX-COST-HOLD     PIC 9(7)V99.
+JS0699        05 WS-TAX-AMOUNT        PIC 9(7)V99.
+JS0699        05 WS-TAX-PPL-WORK      PIC 9(3)V9(5).
+JS0699        05 WS-TAX-PST-RATE      PIC 9(3)V9(5) VALUE ZERO.
+JS0699        05 WS-TAX-GST-RATE      PIC 9(3)V9(5) VALUE ZERO.
+DEBUG *****03 WS-CXMLOG-MESSAGE            PIC X(132).
+050712     03 WS-CXML-UNPACK               PIC 9(09)  VALUE ZERO.
+CP0809     03 WS-CXML-DATA.
+CP0809        05 FILLER                    PIC X(03) VALUE 'US '.
+CP0809        05 WS-CXML-DATE              PIC 9(05).
+CP0809        05 FILLER                    PIC X(01) VALUE ' '.
+CP0809        05 WS-CXML-TIME              PIC 99B99B99.
+CP0809        05 FILLER                    PIC X(01) VALUE ' '.
+CP0809        05 WS-CXML-WORK              PIC X(114).
+CP0406     03 WS-SUB-PROD-WORK-FIELDS-X.
+CP0406        05 WS-CP-FOR-SUBPROD        PIC X(1) VALUE 'N'.
+CP0406        05 WS-READ-SCSTATE-XY-SW    PIC X(1) VALUE 'N'.
+CP0506        05 WS-READ-SCSTATE-SW       PIC X(1) VALUE 'N'.
+CP0406        05 WS-NR2-CP-SET            PIC X(01) VALUE 'N'.
+CP0406        05 WS-NR1-CP-SET            PIC X(01) VALUE 'N'.
+CP0406        05 WS-REF-CP-SET            PIC X(01) VALUE 'N'.
+CP0406     03 WS-SUB-PROD-WORK-FIELDS.
+CP0406        05 WS-SUB-PROD-IN           PIC X(15).
+CP0406        05 WS-SUB-PROD-OUT          PIC X(3).
+SD0222        05 WS-SUB-PROD-CODE         PIC X(3).
+CP0406        05 WS-SUB-PROD-CODE-TYPE    PIC X(1).
+CP0406        05 WS-SUB-PROD-FUEL-TYPE    PIC X(2).
+CP0406        05 WS-SUB-PROD-FOUND        PIC X(1).
+SB0107        05 WS-NATS-PROD-IN          PIC X(3).
+SB0107        05 WS-NATS-PROD-OUT         PIC X(15).
+CP0506        05 WS-TAX-CALC-AMT          PIC 9V9(5) VALUE ZEROS.
+CP0406        05 WS-HOLD-NR2-SUB-PROD-IN  PIC X(15).
+CP0406        05 WS-HOLD-NR1-SUB-PROD-IN  PIC X(15).
+CP0406        05 WS-HOLD-REF-SUB-PROD-IN  PIC X(15).
+CP0406        05 WS-HOLD-OTH-SUB-PROD-IN  PIC X(15).
+CP0406        05 WS-HOLD-NR2-CP-SUFFIX    PIC X(02) VALUE SPACES.
+CP0406        05 WS-HOLD-NR1-CP-SUFFIX    PIC X(02) VALUE SPACES.
+CP0406        05 WS-HOLD-REF-CP-SUFFIX    PIC X(02) VALUE SPACES.
+CP0406        05 WS-CP-SUFFIX             PIC X(02) VALUE SPACES.
+CP0406        05 CP-IDX                   PIC 9(01).
+MB0714        05 WS-NR2-RP-PRICE-TABLE.
+MB0714           10 WS-NR2-RP-PRICE-INFO OCCURS 7 TIMES.
+MB0714              15 WS-NR2-RP-DATE       PIC S9(7)      COMP-3.
+MB0714              15 WS-NR2-RP-NR1-PPG    PIC S9V9999    COMP-3.
+MB0714              15 WS-NR2-RP-NR2-PPG    PIC S9V9999    COMP-3.
+MB0714        05 WS-NR1-RP-PRICE-TABLE.
+MB0714           10 WS-NR1-RP-PRICE-INFO OCCURS 7 TIMES.
+MB0714              15 WS-NR1-RP-DATE       PIC S9(7)      COMP-3.
+MB0714              15 WS-NR1-RP-NR1-PPG    PIC S9V9999    COMP-3.
+MB0714              15 WS-NR1-RP-NR2-PPG    PIC S9V9999    COMP-3.
+MB0714        05 WS-REF-RP-PRICE-TABLE.
+MB0714           10 WS-REF-RP-PRICE-INFO OCCURS 7 TIMES.
+MB0714              15 WS-REF-RP-DATE       PIC S9(7)      COMP-3.
+MB0714              15 WS-REF-RP-NR1-PPG    PIC S9V9999    COMP-3.
+MB0714              15 WS-REF-RP-NR2-PPG    PIC S9V9999    COMP-3.
+KB1007     03 WS-ONL-CROSS-BORDER-FIELDS.
+KB1007        05 WS-ONL-CRD-XBORDER-ASS-PCT PIC SV9(5)  COMP-3 VALUE +0.
+KB1007        05 WS-ONL-ATM-XBORDER-ASS-PCT PIC SV9(5)  COMP-3 VALUE +0.
+KB1007        05 WS-ONL-POS-XBORDER-ASS-PCT PIC SV9(5)  COMP-3 VALUE +0.
+KB1007     03 WS-XBORDER-FIELDS.
+KB1007        05 WS-XBORDER-DEFAULT-PCT     PIC SV9(5)  COMP-3
+KB1007                                                  VALUE +.00800.
+KB1007        05 WS-XBORDER-ASSMT-PCT       PIC SV9(5)  COMP-3 VALUE +0.
+KB1007        05 WS-XBORDER-ASSMT-AMT       PIC S9(7)V99
+KB1007                                                  COMP-3 VALUE +0.
+CP0910     03 WS-HLD-CAR-TAX-ID             PIC X(10)   VALUE SPACES.
+SB0114     03 WS-HOLD-UIWA-TAX-FIELDS.
+SB0114        05 WS-HOLD-UIWA-NR2-COST-SC  PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-NR2-PPU-SC   PIC S9(02)V9(3)    COMP-3.
+SB0114        05 WS-HOLD-UIWA-NR2-SUB-PROD PIC X(03).
+SB0114        05 WS-HOLD-UIWA-NR2-QTY      PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-NR2-QTY-SC   PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-NR2-QTY-US   PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-NR1-COST-SC  PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-NR1-PPU-SC   PIC S9(02)V9(3)    COMP-3.
+SB0114        05 WS-HOLD-UIWA-NR1-SUB-PROD PIC X(03).
+SB0114        05 WS-HOLD-UIWA-NR1-QTY      PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-NR1-QTY-SC   PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-NR1-QTY-US   PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-REF-PPU-SC   PIC S9(02)V9(3)    COMP-3.
+SB0114        05 WS-HOLD-UIWA-REF-COST-SC  PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-REF-SUB-PROD PIC X(03).
+SB0114        05 WS-HOLD-UIWA-REF-QTY      PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-REF-QTY-SC   PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-REF-QTY-US   PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-OTH-PPU-SC   PIC S9(02)V9(3)    COMP-3.
+SB0114        05 WS-HOLD-UIWA-OTH-COST-SC  PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-OTH-SUB-PROD PIC X(03).
+SB0114        05 WS-HOLD-UIWA-OTH-QTY      PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-OTH-QTY-SC   PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-OTH-QTY-US   PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-OIL-COST-SC  PIC S9(07)V99      COMP-3.
+SB0114        05 WS-HOLD-UIWA-OIL-QTY      PIC S9(07)         COMP-3.
+SB0114        05 WS-HOLD-UIWA-PR1-COST     PIC S9(7)V99       COMP-3.
+SB0114        05 WS-HOLD-UIWA-PR1-COST-SC  PIC S9(7)V99       COMP-3.
+SB0114        05 WS-HOLD-UIWA-PR1-COST-US  PIC S9(7)V99       COMP-3.
+SB0114        05 WS-HOLD-UIWA-PR2-COST     PIC S9(7)V99       COMP-3.
+SB0114        05 WS-HOLD-UIWA-PR2-COST-SC  PIC S9(7)V99       COMP-3.
+SB0114        05 WS-HOLD-UIWA-PR2-COST-US  PIC S9(7)V99       COMP-3.
+SB0114        05 WS-HOLD-UIWA-PR3-COST     PIC S9(7)V99       COMP-3.
+SB0114        05 WS-HOLD-UIWA-PR3-COST-SC  PIC S9(7)V99       COMP-3.
+SB0114        05 WS-HOLD-UIWA-PR3-COST-US  PIC S9(7)V99       COMP-3.
+SB0114        05 WS-HOLD-UIWA-TAX-AMT-SC   PIC S9(7)V99 VALUE +0 COMP-3.
+SB0114        05 WS-ORIG-UIWA-TAX-AMT-SC   PIC S9(7)V99 VALUE +0 COMP-3.
+SB0114     03 WS-HOLD-BILL-FIELDS.
+SB0114        05 WS-HOLD-BILLABLE          PIC S9(5)V99 VALUE +0 COMP-3.
+SB0114        05 WS-HOLD-NON-BILLABLE      PIC S9(5)V99 VALUE +0 COMP-3.
+SB0114     03 WS-RET-PROD-PRICE            PIC S9(5)V99 VALUE +0 COMP-3.
+DR1117     03 WS-INTERVAL-CONTROL-X         PIC X(06).
+DR1117     03 WS-INTERVAL-CONTROL
+DR1117          REDEFINES
+DR1117            WS-INTERVAL-CONTROL-X     PIC 9(06).
+DR1117     03 WS-INTERVAL-CONTROL-PACKED    PIC S9(07) COMP-3.
+DR1117
+DR1117*-----------------------------*
+DR1117* FMTB COMMAREA FIELDS        *
+DR1117*-----------------------------*
+DR1117 01 WS-FMTB-COMMAREA.
+DR1117     05 WS-FMTB-CRD-NBR               PIC X(20).
+DR1117     05 WS-FMTB-MRCH-NBR              PIC X(10).
+DR1117     05 WS-FMTB-PRE-AUTH-DT           PIC X(10).
+DR1117     05 WS-FMTB-PRE-AUTH-TS           PIC X(26).
+DR1117     05 WS-FMTB-POST-FLG              PIC X(01).
+
+CP0807** THE FOLLOWING WS FIELDS REPLACE FPMASTR FIELDS THAT WERE
+CP0807** ALWAYS OVERWRITTEN WITH VALUES FROM OTHER FILES.
+CP0807 01  WS-FLAGS-AND-LIMITS.
+CP0807     05 WS-FP-ACCT-CODE            PIC X(10).
+CP0807     05 WS-UNITMST-RECD-SW         PIC X(01)  VALUE 'Y'.
+CP0807     05 WS-FL-HUBOMETER-FLAG       PIC X(01).
+CP0417        88 HUB-READING-REQUIRED        VALUE 'Y','P','R'.
+CP0807     05 WS-FL-DRIVER-NAME-FLAG     PIC X(01).
+CP0807        88 CO-INPUTS-DRIVER-NAME       VALUE 'D'.
+CP0807     05 WS-FL-TRIP-ALLOWANCE-FLAG  PIC X.
+CP0807        88 TRIP-ALLOWANCE-SET          VALUE 'T'.
+CP0807     05 WS-FL-TRIP-FLAG            PIC X.
+CP0807        88 TRIP-NR-REQ-THIS-UNIT       VALUES 'T' 'B' 'D' 'C'.
+CP0807        88 TRIP-NR-ENTERED             VALUE 'E'.
+CP0807     05 WS-FL-CASH-ADV-STATUS      PIC X.
+CP0807     05 WS-FL-CASH-ADV-USED-DLY    PIC S9(9)V99     VALUE ZEROS.
+CP0807     05 WS-FL-CASH-ADV-FLAG        PIC X.
+CP0807     05 WS-FL-CASH-ADV-RATE        PIC S9V99 COMP-3 VALUE ZEROS.
+CP0807     05 WS-FL-OIL-BLOCK            PIC X.
+CP0807        88 NO-OIL-PURCHASE-ALLOWED-THIS-U VALUE 'Y'.
+CP0807     05 WS-FL-MAX-OIL-QTS          PIC S999 COMP-3 VALUE ZEROS.
+CP0807     05 WS-FL-SERVICE-RESTRICTION  PIC X.
+CP0807        88 SELF-SERVICE-ONLY       VALUE 'S'.
+CP0807        88 SELF-MINI-SERVICE       VALUE 'M'.
+CP0807     05 WS-FL-REFER-BLOCK          PIC X.
+CP0807        88 REFER-IS-BLOCKED        VALUE 'Y'.
+
+CP0807** THE FOLLOWING WS FIELDS ARE INITIALLY POPULATED FROM UNITMST
+CP0807** BUT CAN BE OVERWRITTEN WITH VALUES FROM OTHER FILES.
+CP0807 01  WS-REUSED-FLAGS-AND-LIMITS.
+CP0807     05 WS-RFL-CASH-ADV-INIT       PIC S9(9)V99    VALUE ZEROS.
+CP0807     05 WS-RFL-CASH-ADV-USED       PIC S9(9)V99    VALUE ZEROS.
+CP0807     05 WS-RFL-CASH-ADV-INIT-DLY   PIC S9(9)V99    VALUE ZEROS.
+CP0807     05 WS-RFL-CASH-ADV-DAILY-FLAG PIC X.
+CP0807        88 CASH-ADV-DAILY-SET          VALUE '*'.
+CP0807     05 WS-RFL-MAX-PURC-VARIANCE   PIC S999V99     VALUE ZEROS.
+CP0807     05 WS-RFL-MAX-PURC-VARIANCE-R REDEFINES
+CP0807        WS-RFL-MAX-PURC-VARIANCE   PIC S9V9999.
+CP0807     05 WS-RFL-MAX-PURC-DLY-FUEL   PIC S9(9)V99    VALUE ZEROS.
+
+      *********************************************************
+      * CURRENT DATE WORK FIELDS                              *
+      *********************************************************
+       01  WS-BUSINESS-DATE-WORK-FIELDS.
+           05 WS-BUSINESS-DATE-YYYYMMDD.
+              10 WS-BUSINESS-DATE-YYYYMMDD-N    PIC 9(8).
+           05 WS-BUSINESS-DATE-CYYMMDD          PIC 9(7).
+           05 FILLER REDEFINES WS-BUSINESS-DATE-CYYMMDD.
+              10 WS-BUSINESS-DATE-CENT          PIC 9(1).
+              10 WS-BUSINESS-DATE-YYMMDD        PIC 9(6).
+           05 WS-BUSINESS-DATE-YYYYMMDD-FMT     PIC XXXXBXXBXX.
+           05 WS-BUSINESS-TIME-FMT              PIC 99B99B99.
+           05 WS-BUSINESS-DATE-YYYYMM           PIC 9(6).
+
+      *********************************************************
+      * CURRENT DATE WORK FIELDS                              *
+      *********************************************************
+       01  WS-CURRENT-DATE-WORK-FIELDS.
+           05 WS-CURRENT-DATE-CYYDDD           PIC 9(6).
+           05 FILLER REDEFINES WS-CURRENT-DATE-CYYDDD.
+              10 FILLER                        PIC 9(1).
+              10 WS-CURRENT-DATE-YYDDD         PIC 9(5).
+
+           05 WS-CURRENT-DATE-YYYYDDD          PIC 9(7).
+
+           05 WS-CURRENT-DATE-CMMDDYY          PIC 9(7).
+           05 FILLER REDEFINES WS-CURRENT-DATE-CMMDDYY.
+              10 FILLER                        PIC 9(1).
+              10 WS-CURRENT-DATE-MMDDYY        PIC 9(6).
+
+           05 WS-CURRENT-YYYYMMDD-FMT          PIC 9999B99B99.
+           05 WS-CURRENT-DATE-YYYYMMDD         PIC 9(8).
+           05 FILLER REDEFINES WS-CURRENT-DATE-YYYYMMDD.
+              10 WS-CURRENT-DATE-YYYYMMDD-CENT PIC 9(2).
+              10 WS-CURRENT-DATE-YYYYMMDD-YY   PIC 9(2).
+              10 WS-CURRENT-DATE-YYYYMMDD-MM   PIC 9(2).
+              10 WS-CURRENT-DATE-YYYYMMDD-DD   PIC 9(2).
+           05 FILLER REDEFINES WS-CURRENT-DATE-YYYYMMDD.
+              10 FILLER                        PIC 9(2).
+              10 WS-CURRENT-DATE-YYMMDD        PIC 9(6).
+
+      *    ** (-SS = SUNDAY THRU SATURDAY -MS = MONDAY THRU SUNDAY) **
+           05 WS-CURRENT-DATE-WEEKDAY-SS       PIC 9(1).
+           05 WS-CURRENT-DATE-WEEKDAY-MS       PIC 9(1).
+MB0106     05 WS-CURRENT-TS.
+MB0106        10 WS-CURRENT-TS-DATE            PIC X(10).
+MB0106        10 FILLER                        PIC X(01).
+MB0106        10 WS-CURRENT-TS-TIME            PIC X(08).
+MB0106        10 FILLER                        PIC X(07).
+MB0106     05  WS-CURRENT-GMT.
+MB0106         10  WS-GMT-DATE                 PIC X(10).
+MB0106         10  FILLER                      PIC X(01).
+MB0106         10  WS-GMT-TIME                 PIC X(08).
+MB0106         10  FILLER                      PIC X(07).
+MB0106     05 WS-POSTING-TIME                  PIC 99B99B99.
+
+      **** (FP COMMON AREA) ****
+AA0921     COPY TSFMW250 IN CPYREL.
+
+       01  SETTLEMENT-COMMAREA.
+           05 FILLER                   PIC X(4)  VALUE 'FP -'.
+           05 SETL-LOC-O               PIC X(6).
+           05 SETL-CHK-NR-O.
+              10 SETL-CHK-NR-NUM       PIC 9(10).
+           05 SETL-PRINTER-FLAG        PIC X     VALUE SPACE.
+           05 SETL-SUB-ID              PIC X.
+           05 SETL-BALANCE-PARAM-FLAG  PIC X(01).
+           05 SETL-CLOSING-PARAM-FLAG  PIC X(01).
+           05 SETL-PAYMENT-PARAM-FLAG  PIC X(01).
+           05 SETL-BALANCE-REQ-FLAG    PIC X(01).
+           05 SETL-CLOSING-REQ-FLAG    PIC X(01).
+           05 SETL-PAYMENT-REQ-FLAG    PIC X(01).
+           05 FILLER                   PIC X(195) VALUE SPACES.
+       01  SETTLEMENT-COMMAREA-RETURN REDEFINES SETTLEMENT-COMMAREA.
+           05 SETL-RETURN-ERROR-NUMBER PIC S9(5) COMP-3.
+           05 SETL-RETURN-MESSAGE.
+CP1011        10 FILLER                PIC X(08).
+CP1011        10 SETL-RETURN-CNTL-NR   PIC 9(7).
+              10 FILLER                PIC X(205).
+
+       01  SETTLEMENT-DISPLAY-MSG.
+           05 FILLER                   PIC X(07)  VALUE '| STL: '.
+           05 SETL-DISPLAY-MESSAGE     PIC X(31).
+
+
+       01  WS-FPLG-COMMAREA.
+MP1004     05 WS-FPLG-CA-USILOG     PIC X(0220).
+CC040B     05 WS-FPLG-CA-FMLOG      PIC X(2040).
+
+011222*-----------------------------*
+011222* COMMAREA FOR TSFMO0TX       *
+011222*-----------------------------*
+011222 01  WS-TSFMO0TX-COMM-AREA.
+011222     05 WS-TSFMO0TX-COMM-PGM          PIC X(08).
+011222     05 WS-TSFMO0TX-COMM-PROCESS-TYPE PIC X(01).
+011222     05 WS-TSFMO0TX-COMM-FMLOG        PIC X(2040).
+011222     05 FILLER                        PIC X(452).
+
+       01  FILLER.
+      **** (FILE-RRNS-AND-KEYS) ****
+           03 FND-RRN            PIC S9(7) VALUE +0 COMP SYNC.
+           03 ORDRFIL-RRN        PIC S9(7) VALUE +0 COMP SYNC.
+           03 ORDRPTR-RRN        PIC S9(7) VALUE +0 COMP SYNC.
+           03 SVC-RRN            PIC S9(7) VALUE +0 COMP SYNC.
+           03 FMLOG-RRN          PIC S9(7) VALUE +0 COMP SYNC.
+           03 DRFTLG1-RRN        PIC S9(7) VALUE +0 COMP SYNC.
+           03 PRMLOG-RRN         PIC S9(8) VALUE +0 COMP SYNC.
+           03 SAVE-RRN  COMP-3   PIC  9(7) VALUE 0.
+           03 SCMSTR-KEY         PIC X(10)   VALUE SPACES.
+           03 FILLER       REDEFINES SCMSTR-KEY.
+              05 SCM-KEY-ST      PIC XX.
+              05 SCM-KEY-NUM     PIC XXX.
+              05 FILLER          PIC X(5).
+           03 SCMSTR-KEY-TEMP    PIC X(10)   VALUE SPACES.
+           03 CDEQUIP-KEY        PIC X(15) VALUE SPACES.
+           03 SCFUELP-KEY        PIC X(15) VALUE SPACES.
+           03 RATE-KEY-RATE      PIC X VALUE SPACE.
+CP1011     03 WS-RRN-MATCHED     PIC 9(7) VALUE ZEROS.
+CP1011     03 WRK-RRN            PIC 9(7) VALUE ZEROS.
+CP1011     03 FILLER REDEFINES WRK-RRN.
+CP1011        05 WRK-RRN-1ST     PIC 9(1).
+CP1011        05 FILLER          PIC 9(6).
+
+         01 WS-FF-LOG-RECD         PIC X(341) VALUE SPACES.
+         01 FILLER                 REDEFINES WS-FF-LOG-RECD.
+           03 FF-LOG-RECD-ID       PIC XX.
+           03 FF-LOG-OP-ID         PIC XXXX.
+           03 FF-LOG-TERM-ID       PIC XXXX.
+           03 FF-LOG-DATE          PIC S9(5) COMP-3.
+           03 FF-LOG-TIME          PIC S9(6) COMP-3.
+           03 FF-LOG-CHNG-TYPE     PIC XX.
+           03 FF-LOG-SC-CODE       PIC X(5).
+           03 FILLER.
+              05 FF-LOG-DATA-1-FLAG PIC X.
+              05 FF-LOG-DATA-1-OLD.
+                 07 FILLER           PIC 99V999 COMP-3.
+                 07 FILLER           PIC 99V999 COMP-3.
+                 07 FILLER           PIC 99V999 COMP-3.
+           03 FILLER.
+              05 FF-LOG-DATA-2-FLAG PIC X.
+              05 FF-LOG-DATA-2-NEW.
+                 07 FF-LOG-DATA-2-1  PIC 99V999 COMP-3.
+                 07 FF-LOG-DATA-2-2  PIC 99V999 COMP-3.
+                 07 FF-LOG-DATA-2-3  PIC 99V999 COMP-3.
+       01  FILLER REDEFINES WS-FF-LOG-RECD.
+      **** (WS-SETTLE-CANCEL-LOG) ****
+           03 FF-SETTLE-CANCEL-ID  PIC XX.
+           03 FF-SETTLE-RECD       PIC X(130).
+           03 FF-SETTLE-CANCEL-DATE PIC S9(7) COMP-3.
+           03 FF-SETTLE-CANCEL-TIME PIC S9(7) COMP-3.
+           03 FF-SETTLE-CANCEL-TERMID PIC XXXX.
+
+       01  FILLER.
+           05  TST-KEY.
+               10  TST-PHONE-NUMBER   PIC 9(10)     VALUE ZERO.
+           05 FILLER                  REDEFINES TST-KEY.
+              10 TST-KEY-AREA-CODE.
+                 15 FILLER             PIC X.
+                 15 TST-KEY-AREA-MID   PIC X.
+                 15 FILLER             PIC X.
+              10 TST-KEY-PREFIX        PIC XXX.
+              10 FILLER                PIC X(4).
+
+SB0315     COPY SETINFOC IN CPYREL.
+MP0411     COPY BTCHSETC IN CPYREL.
+           COPY CSITELGC IN CPYREL.
+DR0117     COPY CSTANDC  IN CPYREL.
+CP1098     COPY CXXCW0CS IN CPYREL.
+SB0513     COPY TSXCW020 IN CPYREL.
+           COPY TSFMW667 IN CPYREL.
+SB0513     COPY TSFMW030 IN CPYREL.
+           COPY TSFMW040 IN CPYREL.
+           COPY CXISW001 IN CPYREL.
+           COPY DRAFTSC  IN CPYREL.
+           COPY DRFTLGC  IN CPYREL.
+           COPY CDXLATEC IN CPYREL.
+           COPY ZIPXREFC IN CPYREL.
+CP0208     COPY UNITMSTC IN CPYREL.
+JSH318     COPY SCMSTRC  IN CPYREL.
+           COPY SCLOCATC IN CPYREL.
+           COPY CXUTW123 IN CPYREL.
+      ***** USED BY CUSTID REFORMAT ROUTINE CXUTS200
+           COPY CXUTW200 IN CPYREL.
+           COPY PROCCTLC IN CPYREL.
+           COPY USISET   IN CPYREL.
+           COPY BMSATTR  IN CPYREL.
+           COPY TIMDAT   IN CPYREL.
+           COPY CXXCW013 IN CPYREL.
+ED1101     COPY CXACW040 IN CPYREL.
+091509***** WORK AREA FOR LINKING TO CREDITL UPDATE, CXACO0UD
+091509     COPY CXACW031 IN CPYREL.
+ED0102     COPY TSXCW110 IN CPYREL.
+ED0102     COPY CXXCW330 IN CPYREL.
+ED1203     COPY PRMPINC  IN CPYREL.
+ED1203     COPY CXPSW230 IN CPYREL.
+
+******** CHANGE THIS BACK TO USING REAL COPYBOOK NAMES - CSP
+CP0208     COPY PRDLMITC IN CPYREL.
+CP0208     COPY PRDUSEDC IN CPYREL.
+
+JS0604     COPY PRODCODC IN CPYREL.
+ED0406     COPY TSFMW230 IN CPYREL.
+MN0207     COPY CXXCW052 IN CPYREL.
+102810***** PRODUCT CONTROL RECORD
+MB0715     COPY XCPRODCC IN CPYREL.
+
+       01  WS-HOLD-SC-RECORD.
+           05 WS-HOLD-SC-RECORD-KEY       PIC X(010).
+           05 FILLER                      PIC X(281).
+           05 WS-HOLD-SC-COST-PLUS-FLAG   PIC X(001).
+CP0400     05 FILLER                      PIC X(142).
+CP0400     05 WS-HOLD-SC-SETTLE-PMT-CYC   PIC X(001).
+CP0400     05 FILLER                      PIC X(015).
+CP0400     05 WS-HOLD-SC-SETTLE-PMT-METH  PIC X(002).
+CP0400     05 FILLER                      PIC X(569).
+           COPY CDADDRC.
+           COPY CDEQUIPC.
+           COPY SCFUELPC.
+091509****** DB2 CREDITL TABLE
+SR0119     COPY DCREDITL.
+091509****** DB2 GLOBAL CREDIT TABLE
+SR0119     COPY DCRDLMTS.
+091509***** WORK AREA FOR LINKING TO CREDLOD REPLACEMENT, CXACO0LD
+           COPY CXXCW002.
+           COPY CXXCW003.
+           COPY ORDRFILC.
+MN1108     COPY CDCORDFL.
+           COPY ORDRPTRC.
+           COPY CDCORDPT.
+CP1211     COPY CXUTW400.
+MP1004     COPY FPDLGC.
+           COPY CXORW002.
+MN1108     COPY CDCORDFL.
+           COPY CXORW003.
+           COPY OPACDATA.
+           COPY OPACSF1C.
+DR0422     COPY PRMCARDC IN CPYUAT.
+       01  WS-HOLD-PRM-CARD-RECORD     PIC X(590).
+SB0514     COPY PRMINFOC.
+           COPY PRMXREFC.
+080116     COPY CDNCUSTC.
+BW0211     COPY CODESC.
+           COPY DSMSTRC.
+102810***** CROSS REF FROM CARD TO DSMSTR
+102810     COPY DSCARDC.
+           COPY DSTRANC.
+           COPY TSDSW010.
+AA0921     COPY CARDNETC IN CPYREL.
+022112     COPY CXXCW001.
+           COPY PRMDLXFC.
+KB0408     COPY TSFMW001.
+DR0422     COPY PRMRLOGC IN CPYREL.
+           COPY POMSTRC.
+011222     COPY FMLOG2C IN CPYREL.
+
+DR0422     COPY PRDDISC IN CPYREL.
+
+CC040B 01  WS-HOLD-FMLOG                       PIC X(2040).
+
+           COPY FMPOMSTC.
+           COPY FMPOOLC.
+JS1111     COPY CXXCW0CL.
+           COPY CXITW001.
+           COPY CDREPRTC.
+           COPY CXORW001.
+           COPY SCSTATEC.
+CC0502     COPY OTHFUELC.
+MP1011     COPY TSFMW0SO.
+DR0817     COPY FMRELATC.
+JS0206     COPY PRDFMRMC.
+JS0206     COPY PRDCUSTC
+JS0206               REPLACING ==:PRDCUST:==     BY ==PRDCUST==
+JS0206                         ==:PRDCST:==      BY ==PRDCST==.
+JS0206     COPY PRDSCMMC
+JS0206               REPLACING ==:PRDSCMM:==     BY ==PRDSCMM==
+JS0206                         ==:PRDSCM:==      BY ==PRDSCM==.
+           COPY TSMMW003.
+ED0906     COPY TSXCW005.
+013015     COPY TSXCW007 REPLACING ==:PREF:==
+013015                                    BY ==S007-==.
+      ***** WORK AREA FOR CALL TO TSXCS050
+021908     COPY TSXCW050.
+      *****  USED TO LINK TO CXXCO0FC, IRIS FRAUD DETECT PROCESSING
+MN0814     COPY CXXCW170.
+080210*****  ATMW- WORK AREA
+BW0211     COPY CXPSW080.
+080210*****  COUNTRY CODE CONVERSION RECORD LAYOUT
+080210     COPY CNTRY2C.
+102810*****  COMMAREA FOR SUBROUTINE TSFMO0LP, FLEET LIMIT PROCESSING
+102810     COPY TSFMW0LP.
+      *****  USED TO LINK TO TSFMSNPR, NET PRICING FILE INFO
+BG0418     COPY TSFMWNPR.
+      *****  USED TO LINK TO TSFMO0GD, GET DISCOUNT CALC INFO
+DR0422     COPY TSFMW270 IN CPYREL.
+      *****  USED TO LINK TO TSFMO0CD, CALCULATE DISCOUNT ROUTINE
+DR0422     COPY TSFMW285 IN CPYREL.
+MB0114*****  USED TO LINK TO TSFMO0CT, CANADIAN TAXES
+030114     COPY TSFMW290.
+
+      **** (RECORD LAYOUT FOR THE INTRA-DAY MESSAGE) ****
+       01  INTRA-DAY-ERROR-LAYOUT.
+           05 FILLER                           PIC X(02) VALUE '1E'.
+           05 IDEL-ACCOUNT-CODE                PIC X(05).
+           05 IDEL-UNIT-NUMBER                 PIC X(06).
+           05 IDEL-LOCATION-CODE               PIC X(05).
+           05 IDEL-LOCATION-NAME               PIC X(15).
+           05 IDEL-LOCATION-CITY               PIC X(12).
+           05 IDEL-LOCATION-STATE              PIC X(02).
+           05 IDEL-TRANSACTION-TIME            PIC 9(04).
+           05 IDEL-TRIP-NUMBER                 PIC X(10).
+           05 IDEL-HUB-READING                 PIC 9(06).
+           05 IDEL-CARD-NUMBER                 PIC 9(10).
+           05 IDEL-EMPLOYEE-NUMBER             PIC X(16).
+           05 IDEL-DL-STATE                    PIC X(02).
+           05 IDEL-DL-NR                       PIC X(20).
+           05 FILLER                           PIC X(08) VALUE SPACES.
+           05 FILLER                           PIC X(02) VALUE '2E'.
+           05 IDEL-PO-NUMBER                   PIC X(10).
+           05 IDEL-TRAILER-NUMBER              PIC X(10).
+           05 IDEL-CUSTOMER-ID                 PIC X(10).
+           05 IDEL-TRAILER-HUBX.
+              10 IDEL-TRAILER-HUB              PIC 9(6)V9.
+           05 IDEL-TRANSACTION-DATE            PIC 9(6).
+           05 FILLER                           PIC X(83) VALUE SPACES.
+           05 FILLER                           PIC X(02) VALUE '3E'.
+           05 IDEL-RETURN-CODE                 PIC 9(05).
+           05 IDEL-ERROR-MESSAGE               PIC X(121).
+
+MB0714     COPY FMRACKC.
+MB0714     COPY FMRACKHC.
+PM0916     COPY SCRACKC.
+           COPY SILIMITC.
+           COPY TSSIW010.
+           COPY CDAUDITC.
+           COPY CXZZW460.
+      ***** NEXT TWO COPYBOOKS CONTAIN ABEND WORK AREAS
+CW1108     COPY CXXCW110.
+091211     COPY CXXCW130.
+           COPY CXXCW0PL.
+082008     COPY CXXCW0PU.
+
+         01 FILLER.
+           03 DUP-CONTROL-NR       PIC S9(7) COMP-3 VALUE +0.
+
+           COPY CXXCW038.
+
+       01  FILLER.
+      **** (WS-CANCEL-WORK-AREA) ****
+           05 WS-CANCEL-AREA.
+              10 WS-CANCEL-SC-CODE   PIC X(5).
+              10 WS-CANCEL-CARD-NR   PIC X(10).
+CP0111        10 WS-CANCEL-TRANS-NR  PIC X(07).
+CP1011        10 FILLER REDEFINES WS-CANCEL-TRANS-NR.
+CP1011           15 WS-CNL-TRANS-NR-N PIC 9(07).
+CP1011        10 FILLER REDEFINES WS-CANCEL-TRANS-NR.
+CP1011           15 WS-CNL-TRANS-NR-6 PIC X(06).
+CP1011           15 FILLER            PIC X(01).
+              10 WS-PC-CANCEL-FLAG   PIC X(01)  VALUE 'N'.
+                 88 THIS-IS-A-PC-CANCEL         VALUE 'Y', 'A'.
+                 88 THIS-IS-A-ATM-CANCEL        VALUE 'A'.
+           05 WS-NW-TS-CODE.
+              10 WS-NW-TS-ALP        PIC X(02).
+              10 WS-NW-TS-NUM        PIC 9(03).
+         01 VCWS-ERROR-IND         PIC X    VALUE 'N'.
+           88 VCWS-ERROR                    VALUE 'Y'.
+         01 SAVE-OPERATOR-INFO.
+            03 FILLER              PIC X    VALUE SPACE.
+            03 FILLER              PIC 9(3) VALUE ZEROS.
+         01 HUB-ERROR-IND          PIC X   VALUE 'N'.
+           88 HUB-ERROR-FOUND              VALUE 'Y'.
+
+         01 FILLER.
+            03 WS-DEEDIT-QTYX.
+               05 WS-DEEDIT-QTY        PIC 9(7)V99.
+            03 WS-DEEDIT-QTY-NO-DECX.
+               05 WS-DEEDIT-QTY-NO-DEC PIC 9(7).
+            03 WS-DEEDIT-COSTX.
+               05 WS-DEEDIT-COST       PIC 9(7)V99.
+            03 WS-DEEDIT-PPUX.
+               05 WS-DEEDIT-PPU        PIC 9(2)V9(3).
+            03 WS-DEEDIT-HUBX.
+               05 WS-DEEDIT-HUB        PIC 9(7)V9.
+
+           03 INP-CO-SMLNAME           PIC X(7).
+           03 INP-AUTH-NR              PIC XXXX.
+           03 WS-WORK-PHONE-NR.
+              05 DPH-AREA              PIC XXX.
+              05 DPH-EXCH              PIC XXX.
+              05 DPH-NR                PIC XXXX.
+           03 WS-WORK-PROD-AMT         PIC S9(7)V99   VALUE +0.
+           03 WS-WORK-PROD-AMT-SC      PIC S9(7)V99   VALUE +0 COMP-3.
+           03 WS-WORK-PROD-AMT-US      PIC S9(7)V99   VALUE +0 COMP-3.
+           03 INP-NR-GALLONS           PIC 9(7)V99    VALUE 0.
+           03 INP-PRICE-GALLON         PIC 9(2)V9(3)  VALUE 0.
+           03 INP-TOTAL-COST           PIC 9(7)V99    VALUE 0.
+           03 INP2-NR-GALLONS          PIC 9(7)V99    VALUE 0 COMP-3.
+           03 INP2-PRICE-GALLON        PIC 9(2)V9(3)  VALUE 0 COMP-3.
+           03 INP2-TOTAL-COST          PIC 9(7)V99    VALUE 0 COMP-3.
+           03 INP3-NR-GALLONS          PIC 9(7)V99    VALUE 0 COMP-3.
+           03 INP3-PRICE-GALLON        PIC 9(2)V9(3)  VALUE 0 COMP-3.
+           03 INP3-TOTAL-COST          PIC 9(7)V99    VALUE 0 COMP-3.
+           03 WS-PROD-BILL-FLAG        PIC X(1)     VALUE SPACE.
+           03 INP-PROD-BILL-1          PIC X(1)     VALUE SPACE.
+           03 INP-PROD-BILL-2          PIC X(1)     VALUE SPACE.
+           03 INP-PROD-BILL-3          PIC X(1)     VALUE SPACE.
+           03 WORK-PROD-CODE.
+              05 WORK-PROD-CODE-CHAR OCCURS 2 TIMES PIC X.
+           03 WORK-PROD-CODE-NUM REDEFINES WORK-PROD-CODE PIC 9(2).
+           03 WORK-PROD-DESC           PIC X(14).
+SB0814     03 HOLD-WORK-PROD-CODE      PIC X(02).
+SB0914     03 WS-PUR-CATEGORY          PIC X(05).
+091614     03 WS-DEFAULT-MAX-QTY       PIC 9(5) COMP-3 VALUE 99999.
+100914     03 WS-UNITGRP-NR-10.
+100914        05 FILLER                   PIC X(04).
+100914        05 WS-UNITGRP-NR-5-10       PIC X(06).
+
+      **** (THE RATE  FIELDS IS THE COMPANY BASE CURRENCY) ****
+      **** (THE RATE2 FIELDS IS THE SC           CURRENCY) ****
+      **** (THE RATE2 FIELDS IS US               CURRENCY) ****
+082008     03 WS-ADVANCE-RATE           PIC S9(5)V99  COMP-3 VALUE +0.
+082008     03 WS-ADVANCE-RATE2          PIC S9(5)V99  COMP-3 VALUE +0.
+082008     03 WS-ADVANCE-RATE3          PIC S9(5)V99  COMP-3 VALUE +0.
+082008     03 WS-TOTAL-RATE             PIC S9(5)V99  COMP-3 VALUE +0.
+082008     03 WS-TOTAL-RATE2            PIC S9(5)V99  COMP-3 VALUE +0.
+082008     03 WS-TOTAL-RATE3            PIC S9(5)V99  COMP-3 VALUE +0.
+082008     03 WS-FUEL-RATE              PIC S9(5)V99  COMP-3 VALUE +0.
+082008     03 WS-FUEL-RATE2             PIC S9(5)V99  COMP-3 VALUE +0.
+082008     03 WS-FUEL-RATE3             PIC S9(5)V99  COMP-3 VALUE +0.
+           03 WS-PPRIDE-TRANSFER-PPG    PIC S9(2)V999 COMP-3 VALUE ZERO.
+           03 WS-PPRIDE-MARKUP-SC       PIC S9(2)V999 COMP-3 VALUE ZERO.
+082008     03 WS-CO-FUEL-RATE-REDUCTION PIC S9(5)V99  COMP-3 VALUE ZERO.
+082008     03 WS-BASE-ADVANCE-RATE      PIC S9(5)V99  COMP-3 VALUE ZERO.
+082008     03 WS-MIXED-ADVANCE-RATE     PIC S9(5)V99  COMP-3 VALUE ZERO.
+           03 CHECK-WORK                PIC 9(10) VALUE 0.
+           03 FILLER               REDEFINES CHECK-WORK.
+             05 HI-CHECK-DIGITS         PIC 9(9).
+             05 LOW-CHECK-DIGIT         PIC 9.
+           03 WS-CHECK-WORK             PIC 9(9).
+           03 WS-CHECK-HOLD             PIC 9(10).
+           03 WS-CALC-CHECK-DIGIT       PIC 9.
+
+           03 INP-DISC.
+082008       05 INP-F-SRVC-DISC    PIC  9(5)V99.
+082008       05 INP-S-SRVC-DISC    PIC  9(5)V99.
+           03 PC-NAME-CONSTRUCT.
+             05 FILLER             PIC X(5) VALUE 'UNIT '.
+             05 PC-NAME-UNIT       PIC X(10) VALUE SPACES.
+             05 FILLER             PIC X VALUE SPACES.
+             05 PC-NAME-MESSAGE    PIC X VALUE SPACES.
+             05 FILLER             PIC X(12) VALUE SPACES.
+
+           03 INP-COMMON-AREAS.
+JS1203       05 INP-CO-CODE        PIC  X(05).
+             05 INP-COMMON-DATA.
+               07 FILLER           PIC X(8).
+               07 FILLER.
+                  09 FILLER         PIC XX.
+                  09 FILLER         PIC 999.
+               07 FILLER           PIC X.
+               07 FILLER           PIC X(10).
+
+DR0121     COPY CXPSW351 IN CPYREL.
+DR0422*    COPY TSXCW041 IN CPYREL.
+DR0422     COPY CXXCW0LE IN CPYUAT.
+CW1108     COPY TSFMW210.
+CW1108     COPY CXPSW352.
+MP1204     COPY TSFMW673.
+CP0807*****CONTAINS UNITMST-CHANGE-RECORD
+CP0208     COPY TSFMW181.
+
+SB0114*****CONTAINS WS-USER-INPUT-WORK-AREA
+           COPY TSFMW280.
+SB0114*****SAVE AREA FOR ORIGINAL UIWA AREA
+SB0114 01 WS-ORIG-UIWA-AREA     PIC X(1500).
+SB0114*****SAVE AREA FOR ORIGINAL FMLOG RECORD
+SB0114 01 WS-ORIG-FMLOG-AREA    PIC X(2040).
+
+       01  UNFORMATTED-AREA-DEF   PIC X(15)  VALUE '**UNFORMATTED**'.
+082008***** INCREASED BECAUSE OF FIELDS ADDED TO COPYBOOK CXPSW351
+BW0211***** INCREASED BECAUSE OF FIELDS ADDED TO COPYBOOK TSXCW030
+DR0121 01  UNFORMATTED-LENG       PIC S9999   VALUE +2466  COMP.
+DR0121 01  UNFORMATTED-AREA       PIC X(2452).
+
+       01  FILLER                 REDEFINES UNFORMATTED-AREA.
+           03 FILLER                PIC XXXX.
+           03 INP-PC-ZON-OVERLAY.
+             05 INP-PC-ZON-VER-FLAG PIC X.
+DR0121       05 INP-PC-ZON-TRAILER  PIC X(2447).
+
+       01  FILLER REDEFINES UNFORMATTED-AREA.
+           03 UNF-PGRM-NAME        PIC XX.
+           03 FILLER               PIC X.
+DR0121     03 INP-NP-DATA          PIC X(2449).
+
+CP1011***** CHANGED TO ALLOW EITHER 6 DIGIT OR 7 DIGIT CONTROL NUMBER
+CP1011***** TO BE ENTERED ON THE CANCEL REQUEST
+      **** (FP CANCEL AREA) ****
+       01  WS-INP-FP-CANCEL.
+              05 FILLER                PIC X(3).
+              05 FP-CANCEL-REQ         PIC X(7) VALUE 'CANCEL '.
+CP1011        05 FPCR-CTLNR-CARD.
+CP1011           10 FPCR-CTL-6         PIC 9(6).
+CP1011           10 FILLER REDEFINES FPCR-CTL-6.
+CP1011              15 FPCR-CTL-6X     PIC X(6).
+CP1011           10 FILLER             PIC X.
+CP1011           10 FPCR-CTL6-CARD     PIC X(16).
+CP1011           10 FILLER             PIC X.
+CP1011        05 FILLER REDEFINES FPCR-CTLNR-CARD.
+CP1011           10 FPCR-CTL-7         PIC 9(7).
+CP1011           10 FILLER             PIC X.
+CP1011           10 FPCR-CTL7-CARD     PIC X(16).
+
+CP1011 01  WS-FP-CANCEL-CTL            PIC 9(7).
+CP1011 01  FILLER REDEFINES WS-FP-CANCEL-CTL.
+CP1011     05 WS-FP-CANCEL-CTL1        PIC X.
+CP1011     05 WS-FP-CANCEL-CTLX        PIC X(6).
+
+CP1011 01  WS-INP-FP-CANCEL-CARD.
+             05 FP-CANCEL-CARD         PIC X(16).
+             05 FP-CANCEL-COMMON REDEFINES FP-CANCEL-CARD.
+                07 FP-CANCEL-CO-CODE.
+                   09 FP-CANCEL-CO-CODE-N PIC 9(4).
+                07 FP-CANCEL-ID-NR.
+                   09 FILLER              PIC X(7).
+                   09 FP-CANCEL-4-CHECK   PIC X.
+                07 FILLER                 PIC X(4).
+             05 FILLER REDEFINES FP-CANCEL-COMMON.
+                07 FP-CANCEL-CO-CODE-5.
+                   09 FP-CANCEL-CO-CODE-5-N PIC 9(5).
+                07 FP-CANCEL-ID-NR-5.
+                   09 FILLER                PIC X(7).
+                   09 FP-CANCEL-5-CHECK     PIC X.
+                07 FILLER                 PIC X(3).
+
+SB0114* THE 88 LEVELS UNDER WS-XTN-REQUEST-FLAG HAVE BEEN MOVED TO
+SB0114* THE WS-USER-INPUT-WORK-AREA IN COPYLIB TSFMW280
+       01  WS-XTN-REQUEST-AREA.
+           03 WS-XTN-REQUEST-FLAG  PIC X VALUE SPACES.
+SB0114*      88 THIS-BE-A-PC-REQUEST      VALUES '+' '$' '#' '!' '?'
+SB0114*                                          '%' '&' '(' ')' '*'
+SB0114*                                          '>' ',' '.' '^' '<'
+SB0114*                                          '\' '|' '['.
+SB0114*      88 THIS-BE-AN-AUTOMATED-REQ  VALUES '$' '!' '%' '&' '('
+SB0114*                                          ')' '*' '?' ',' '.'
+SB0114*                                          '^' '<' '\' '|' '['.
+SB0114*      88 THIS-BE-A-SETTLEMENT-REQUEST   VALUE '-'.
+SB0114*      88 THIS-BE-A-CANCEL-REQUEST       VALUE '@'.
+SB0114*      88 THIS-IS-A-CANCEL-REQ           VALUE 'C'.
+SB0114*      88 THIS-IS-A-CANCEL-XTN           VALUE '@' 'C'.
+SB0114*      88 THIS-BE-A-VRU-XTN              VALUE '#' '>' '\'.
+SB0114*      88 THIS-BE-A-REAL-VRU-XTN         VALUE '#' '>'.
+SB0114*      88 THIS-BE-A-VRU-EXPRESS-CASH     VALUE '#'.
+SB0114*      88 THIS-BE-A-VRU-CASH-ON-CARD     VALUE '>'.
+SB0114*      88 THIS-BE-A-RESTORE-REQUEST      VALUE '='.
+SB0114*      88 THIS-BE-A-BATCHED-REQUEST      VALUE '&'.
+SB0114*      88 THIS-BE-A-NATS-AUTH            VALUE '*'.
+SB0114*      88 THIS-BE-AN-AUTO-GAS-PRE-AUTH   VALUE '!'.
+SB0114*      88 THIS-BE-AN-AUTO-GAS-AUTH       VALUE '%'.
+SB0114*      88 THIS-BE-AN-AUTO-GAS-XTN        VALUE '!' '%'.
+SB0114*      88 THIS-BE-AN-IOL-PRE-AUTH        VALUE '('.
+SB0114*      88 THIS-BE-AN-IOL-AUTH            VALUE ')'.
+SB0114*      88 THIS-BE-AN-IOL-XTN             VALUE '(' ')'.
+SB0114*      88 THIS-BE-A-SMART-FUEL-PRE-AUTH  VALUE ','.
+SB0114*      88 THIS-BE-A-SMART-FUEL-AUTH      VALUE '.'.
+SB0114*      88 THIS-BE-A-SMART-FUEL-XTN       VALUE '.'.
+SB0114*      88 THIS-BE-A-PRODUCT-PRE-AUTH     VALUE '['.
+SB0114*      88 THIS-BE-AN-UNATTENDED-PRE-AUTH VALUE '!' '(' ',' '['.
+SB0114*      88 THIS-BE-AN-UNATTENDED-AUTH     VALUE '%' ')' '*' '.'
+SB0114*                                              '^' '<'.
+SB0114*      88 THIS-BE-AN-UNATTENDED-XTN      VALUE '!' '(' '%' ')'
+SB0114*                                              '*' ',' '.' '^'
+SB0114*                                              '<' '['.
+SB0114*      88 THIS-BE-A-NO-VERIFY-XTN        VALUE '|'.
+SB0114*      88 THIS-BE-AN-ATM-XTN             VALUE '?'.
+SB0114*      88 THIS-BE-AN-ATM-CANCEL          VALUE '~'.
+SB0114*      88 THIS-BE-A-PETRO-RECEIVABLE     VALUE '^'.
+SB0114*      88 THIS-BE-A-FLEET-XTN            VALUE '<'.
+SB0114*      88 THIS-BE-A-EMAIL-XTN            VALUE '\'.
+SB0114*      88 THIS-BE-A-CARD-NR              VALUE '0' THRU '9'.
+SB0114*      88 FPM-REBUILD                    VALUE 'R'.
+SB0114*      88 FPM-OPEN                       VALUE 'O'.
+           03 WS-XTN-TYPE-FLAG       PIC X(01) VALUE SPACES.
+              88 WS-XTN-TYPE-LARGE-AMT         VALUE 'L'.
+
+       01  WS-AUTOMATED-INPUT-AREA.
+             05 INP-PC-XTN-REQUEST   PIC X(01).
+             05 INP-PC-CARD-NR       PIC X(16).
+             05 INP-PC-UNIT          PIC X(6).
+             05 INP-PC-TS-CODE       PIC X(5).
+             05 INP-PC-GALLONS       PIC 999V99.
+             05 INP-PC-TOTAL         PIC 999V99.
+             05 INP-PC-INVOICE       PIC X(8).
+             05 INP-PC-TRIP-NR       PIC X(10).
+             05 INP-PC-TR-GALS       PIC 999V99.
+             05 INP-PC-TR-PPG        PIC 99V999.
+             05 INP-PC-TR-COST       PIC 999V99.
+             05 INP-PC-OIL-QTS       PIC 99.
+             05 INP-PC-OIL-COST      PIC 999V99.
+             05 INP-PC-HUB-READING   PIC 9(6)V9.
+             05 INP-PC-HUB-REQ-FLG   PIC X.
+      ****     88 PC-SAYS-HUB-AVAILABLE VALUE '*'.
+             05 INP-PC-SPCL-UNIT-NR PIC X(6).
+             05 INP-PC-ADV-AMT      PIC 9999V99.
+             05 INP-PC-MSG-QUERY    PIC X.
+             05 INP-PC-PRINT-REQ    PIC X.
+             05 INP-PC-CHECK-NRX.
+                10 INP-PC-CHECK-NR  PIC 9(10).
+             05 INP-PC-OGALS        PIC 999V99.
+             05 INP-PC-OTTL         PIC 999V99.
+             05 FILLER              OCCURS 3 TIMES.
+                07 INP-PC-PROD-CODE PIC XX.
+                07 INP-PC-PROD-AMT  PIC XXXXXX.
+                07 INP-PC-PROD-AMTN REDEFINES INP-PC-PROD-AMT
+                                    PIC 9(4)V99.
+             05 INP-PC-DL-NR        PIC X(20).
+             05 INP-PC-DL-ST        PIC XX.
+             05 INP-PC-ITTL         PIC 9999V99.
+             05 INP-PC-CARD-EXP-DATE PIC X(4).
+             05 FILLER              PIC X(26).
+      * SUB-ID IS IN SRVC-TYPE
+             05 INP-PC-SRVC-TYPE    PIC X.
+             05 FILLER                     PIC X.
+                88 PC-HAS-ATTACHED-PRINT   VALUE '2'.
+             05 INP-PC-TRAILER-NR   PIC X(10).
+             05 INP-PC-TRAILER-HUB  PIC 9(06)V9.
+             05 INP-PC-PURCHASE-ORDER-NR  PIC X(10).
+             05 INP-PC-DRIVER-NR          PIC X(10).
+             05 INP-PC-NR1-GALS           PIC 9(3)V99.
+             05 INP-PC-NR1-COST           PIC 9(3)V99.
+             05 INP-PC-SWIPED-KEYED       PIC X(1).
+             05 INP-PC-SC-SECU-CARD-INFO.
+                10 FILLER                 PIC X(06).
+                10 INP-PC-SC-SECU-CARD    PIC X(10).
+             05 INP-PC-SC-SECU-PIN        PIC 9(4).
+             05 INP-PC-CANADIAN-TAX       PIC 9(3)V99.
+             05 INP-PC-BATCH-PROCESS-DATE PIC 9(6).
+             05 INP-PC-NATS-INFO.
+                10 INP-PC-NATS-PRICES OCCURS 6 TIMES.
+                   15 INP-PC-NATS-PROD-CODE  PIC X(3).
+                   15 INP-PC-NATS-PUMP-FEE   PIC 9(4)V99.
+                   15 INP-PC-NATS-PUMP-SIGN  PIC X(1).
+                   15 INP-PC-NATS-DISC-PG    PIC 9(4)V999.
+                   15 INP-PC-NATS-DISC-SIGN  PIC X(1).
+                   15 INP-PC-NATS-DISC-EXT   PIC 9(5)V99.
+                   15 INP-PC-NATS-DISC-E-SIGN PIC X(1).
+                10 INP-PC-NATS-POS-FLAG   PIC X(1).
+CP1011          10 INP-PC-NATS-CTL-NR     PIC 9(7).
+                10 INP-PC-NATS-FEE        PIC 9(2)V99.
+                10 INP-PC-NATS-PRE-AUTH-DATE PIC 9(5).
+                10 INP-PC-NATS-PRE-AUTH-SEQ  PIC 9(7).
+                10 INP-PC-NATS-AUTH-NR    PIC 9(10).
+             05 INP-PC-TRAILER-HRS        PIC 9(5)V9.
+             05 INP-PC-IOL-RCP            PIC 9V9(05).
+             05 INP-PC-DEVICE-TYPE        PIC X(4).
+JS1199       05 INP-PC-MASTER-CARD.
+JS1199          10 INP-PC-FLEET-PROD      PIC 9(5).
+JS1199          10 INP-PC-FLEET-DATE-ORIG PIC X(10).
+JS1199          10 INP-PC-FLEET-NAME      PIC X(30).
+JS0600          10 INP-PC-FLEET-ADDR      PIC X(30).
+JS1199          10 INP-PC-FLEET-CITY      PIC X(13).
+JS1199          10 INP-PC-FLEET-STATE     PIC X(02).
+JS0600          10 INP-PC-FLEET-ZIP       PIC X(10).
+JS1199          10 INP-PC-FLEET-AMT-ORIG  PIC 9(05)V99.
+JS1199          10 INP-PC-FLEET-KEY       PIC X(32).
+JS1199          10 INP-PC-FLEET-XTN-DATE  PIC 9(06).
+JS0300          10 INP-PC-FLEET-XTN-TIME  PIC 9(06).
+JS0401       05 INP-PC-UNIT-EXPANDED      PIC X(10).
+CC0502       05 INP-PC-SC-CITY              PIC X(20).
+CC0502       05 INP-PC-SC-STATE             PIC X(02).
+CC0502       05 INP-PC-SC-ZIP               PIC X(10).
+CC0502       05 INP-PC-FUELING-DATE         PIC 9(06).
+CC0502       05 INP-PC-FUELING-TIME         PIC 9(06).
+CC0502       05 INP-PC-OTHER-FUEL-TYPE      PIC X(03).
+CC0502       05 INP-PC-USFLEET-MISC-NR      PIC X(09).
+CC0502       05 INP-PC-PROD-9-TYPE-1        PIC X(03).
+CC0502       05 INP-PC-PROD-9-TYPE-2        PIC X(03).
+CC0502       05 INP-PC-PROD-9-TYPE-3        PIC X(03).
+CC0502       05 INP-PC-BASE-PPG             PIC 9(02)V999.
+CC0502       05 INP-PC-DELIVERY-FEE-PPG     PIC 9(02)V999.
+CC0502       05 INP-PC-TOTAL-TAX-PPG        PIC 9(02)V999.
+CC0303       05 INP-PC-SYSTEM-ID            PIC 9(04).
+CC0303       05 INP-PC-RECV-DATE            PIC X(10).
+CC0303       05 INP-PC-TASK-NR              PIC 9(09).
+CP0406       05 INP-PC-NR2-SUB-PROD         PIC X(15).
+CP0406       05 INP-PC-RFR-SUB-PROD         PIC X(15).
+CP0406       05 INP-PC-OTH-SUB-PROD         PIC X(15).
+CP0406       05 INP-PC-NR1-SUB-PROD         PIC X(15).
+MN0207       05 INP-PC-PR1-SUB-PROD-CODE    PIC X(15).
+MN0207       05 INP-PC-PR2-SUB-PROD-CODE    PIC X(15).
+MN0207       05 INP-PC-PR3-SUB-PROD-CODE    PIC X(15).
+MN0207       05 INP-AUTH-1-PROD-CODE        PIC X(02).
+MN0207       05 INP-AUTH-2-PROD-CODE        PIC X(02).
+MN0207       05 INP-AUTH-3-PROD-CODE        PIC X(02).
+
+      **** (SETTLEMENT REQUEST INPUT AREA) ****
+       01  WS-SETTLEMENT-INPUT-AREA.
+           03 FILLER              PIC X(4).
+           03 INP-SETTLE-TS-CODE  PIC X(6).
+           03 INP-SET-CHECK       PIC 9(10).
+           03 INP-INVOICE         PIC X(8).
+           03 FILLER REDEFINES INP-INVOICE.
+              05 INP-SETTLE-PRINTER-FLAG  PIC X(1).
+              05 FILLER           PIC X(7).
+           03 INP-AMOUNT          PIC 9(7)V99.
+           03 FILLER              PIC X(1024).
+
+       01  WS-INP-CANCEL-AREA.
+      **** (UNFORMATTED-AREA-RCNCL) ****
+           03 FILLER              PIC X(4).
+           03 FILLER              PIC X(1).
+           03 INP-CANCEL-AREA.
+              05 FILLER              PIC X(5).
+              05 FILLER              PIC X(10).
+              05 FILLER              PIC 9(06).
+           03 FILLER              PIC X(1035).
+
+       01  WS-OL-PT-AREA.
+           03 OL-PT-AMOUNT         PIC 9(4)V99.
+           03 OL-PT-CHECK-NR       PIC 9(10).
+           03 OL-PT-MESSAGE-FLAG   PIC X.
+
+      *---------------------------------------------------*
+      * IOL PRE AUTH INPUT/OUTPUT AREA.                   *
+      *---------------------------------------------------*
+       01  WS-IOL-PRE-AUTH-AREA.
+           03 FILLER                  PIC X(4).
+           03 WS-IOL-PRE-AUTH-DATA.
+              05 WS-IOL-SC-CODE       PIC X(05).
+              05 WS-IOL-CARD-NR       PIC X(16).
+              05 WS-IOL-FUEL-TYPE     PIC X(01).
+                 88 WS-IOL-FUEL-TYPE-IS-TRACTOR    VALUE 'T'.
+                 88 WS-IOL-FUEL-TYPE-IS-TRAILER    VALUE 'R'.
+ED0899        05 WS-IOL-PRODUCT-CODE  PIC 9(08).
+              05 WS-IOL-MAX-LITERS-IN PIC 9(03)V99.
+              05 WS-IOL-PPL           PIC 9(01)V999.
+              05 WS-IOL-DRIVER-NUMBER PIC X(16).
+              05 WS-IOL-UNIT-NUMBER   PIC X(12).
+              05 WS-IOL-HUB-READING   PIC 9(07).
+              05 WS-IOL-TRIP-NUMBER   PIC X(12).
+              05 WS-IOL-PIN-NUMBER    PIC X(04).
+              05 WS-IOL-PO-NUMBER     PIC X(10).
+              05 WS-IOL-LANGUAGE-IND  PIC X(01).
+              05 WS-IOL-RCP           PIC 9V9(05).
+
+       01  WS-IOL-PRE-AUTH-RESP.
+           05 WS-IOL-RETURN-CODE      PIC 9(05).
+           05 WS-IOL-RETURN-MESSAGE   PIC X(80).
+           05 WS-IOL-ACCOUNT-CODE     PIC X(05).
+           05 WS-IOL-MAX-LITERS       PIC 9(03)V99.
+           05 WS-IOL-FUNDED-FLAG      PIC X(01).
+           05 WS-IOL-AUTH-NUMBER-01   PIC 9(06).
+           05 WS-IOL-AUTH-NUMBER-02   PIC 9(06).
+
+         01 TERMINAL-OUTPUT-AREA.
+           03 3270-CTRL.
+              05 FILLER             PIC S9(8) COMP VALUE +12738833.
+              05 FILLER             PIC X(208) VALUE SPACES.
+           03 FILLER               REDEFINES 3270-CTRL.
+              05 3270-SBA           PIC X.
+              05 FILLER             PIC XX.
+              05 3270-SBA-1         PIC X.
+              05 FILLER             PIC X(208).
+           03 FILLER               REDEFINES 3270-CTRL.
+              05 FILLER             PIC X(3).
+              05 3270-OUTPUT-DATA   PIC X(209).
+
+
+       01  BATCH-RECORD-OUTPUT-AREA.
+           05 BR-CONTROL-NR        PIC S9(7) COMP-3.
+           05 BR-MESSAGE           PIC X(277).
+
+       01  AUTO-GAS-OUTPUT-AREA.
+           05 AG-ERROR-NUMBER     PIC S9(5) COMP-3.
+           05 AG-ERROR-NUMBER-2   PIC 9(5)   VALUE 99999.
+           05 AG-RESPONSE-FLAGS   PIC 9(16)  VALUE ZEROES.
+           05 AG-MESSAGE.
+              10 FILLER           PIC X(40)  VALUE SPACES.
+              10 FILLER           PIC X(40)  VALUE SPACES.
+
+       01  FILLER.
+      **** (AUTOGAS WORK FIELDS          ) ****
+      **** (THE FOLLOWING WS-AUTO-GAS-AVAIL FIELDS ARE FOR) ****
+      **** (       1....FP LIMIT         ) ****
+      **** (       2....FP TRIP ALLOWANCE) ****
+      **** (       3....CARD LIMITS      ) ****
+      **** (       4....CARD BALANCE     ) ****
+      **** (     OIL....OIL DOLLAR LIMITS) ****
+MN0407**** (     PURC...PURCHASE AMOUNT  ) ****
+           05 WS-AUTO-GAS-AVAILX.
+              10 WS-AUTO-GAS-AVAIL   PIC 9(5)V99 VALUE ZERO.
+           05 WS-AUTO-GAS-AVAIL2     PIC 9(5)V99 VALUE ZERO.
+           05 WS-AUTO-GAS-AVAIL3     PIC 9(5)V99 VALUE ZERO.
+102510     05 WS-AUTO-GAS-AVAIL4     PIC S9(6)V99 VALUE ZERO.
+           05 WS-AUTO-GAS-AVAIL-OIL  PIC 9(5)V99 VALUE ZERO.
+MN0407     05 WS-AUTO-GAS-AVAIL-PURC PIC 9(5)V99 VALUE ZERO.
+
+      **** (THE FOLLOWING IS THE QTY ALLOWED FOR THE SELECTED PROD) ****
+      **** (IT WILL BE USED FOR AUTO-GAS ONLY                     ) ****
+           05 WS-AUTO-GAS-AVAIL-QTYX.
+              10 WS-AUTO-GAS-AVAIL-QTY     PIC 9(5)V99 VALUE ZERO.
+
+      *** (THE FOLLOWING IS THE QTY OR AMT ALLOWED FOR EACH PRODUCT) ***
+           05 WS-AUTO-GAS-AVAIL-ALL.
+              10 WS-AUTO-GAS-AVAIL-QTY-NR2 PIC 9(5)V99 VALUE ZERO.
+              10 WS-AUTO-GAS-AVAIL-QTY-NR1 PIC 9(5)V99 VALUE ZERO.
+              10 WS-AUTO-GAS-AVAIL-QTY-REF PIC 9(5)V99 VALUE ZERO.
+              10 WS-AUTO-GAS-AVAIL-QTY-OTH PIC 9(5)V99 VALUE ZERO.
+              10 WS-AUTO-GAS-AVAIL-QTY-OIL PIC 9(5)V99 VALUE ZERO.
+              10 WS-AUTO-GAS-AVAIL-AMT-CSH PIC 9(5)V99 VALUE ZERO.
+           05 WS-AUTO-GAS-AVAIL-QTY-WRK    PIC 9(5)V99 VALUE ZERO.
+102810     05 WS-SP14-REPLY.
+             10  WS-SP14-MAX-PUR-AMT      PIC  9(05)V99.
+             10  WS-SP14-MAX-PUR-QTY      PIC  9(05)V99.
+             10  WS-SP14-MAX-CASH-AVAIL   PIC  9(05)V99.
+             10  WS-SP14-MAX-OIL-AMT      PIC  9(05)V99.
+             10  WS-SP14-MAX-OIL-QTY      PIC  9(05)V99.
+             10  WS-SP14-MAX-NR2-AMT      PIC  9(05)V99.
+             10  WS-SP14-MAX-NR2-QTY      PIC  9(05)V99.
+             10  WS-SP14-MAX-NR1-AMT      PIC  9(05)V99.
+             10  WS-SP14-MAX-NR1-QTY      PIC  9(05)V99.
+             10  WS-SP14-MAX-REF-AMT      PIC  9(05)V99.
+             10  WS-SP14-MAX-REF-QTY      PIC  9(05)V99.
+             10  WS-SP14-MAX-OTH-AMT      PIC  9(05)V99.
+             10  WS-SP14-MAX-OTH-QTY      PIC  9(05)V99.
+             10  WS-SP14-MAX-PRD-AMT      PIC  9(05)V99.
+             10  WS-SP14-PRODUCTS OCCURS 10 TIMES.
+               15  WS-SP14-PUR-CATEGORY     PIC  X(05).
+               15  WS-SP14-SUB-PROD-CD      PIC  X(03).
+               15  WS-SP14-MAX-PROD-AMT     PIC  9(05)V99.
+               15  WS-SP14-MAX-PROD-QTY     PIC  9(05)V99.
+
+MN0207 01  WS-AUTO-GAS-PRODUCT-INFO.
+MN0207     05 FILLER                    PIC X(1)  VALUE '~'.
+MN0207     05 WS-AUTO-GAS-AVAIL-PROD1   PIC X(2)    VALUE SPACES.
+MN0207     05 WS-AUTO-GAS-AVAIL-AMT1    PIC 9(5)V99 VALUE ZEROS.
+MN0207     05 WS-AUTO-GAS-AVAIL-PROD2   PIC X(2)    VALUE SPACES.
+MN0207     05 WS-AUTO-GAS-AVAIL-AMT2    PIC 9(5)V99 VALUE ZEROS.
+MN0207     05 WS-AUTO-GAS-AVAIL-PROD3   PIC X(2)    VALUE SPACES.
+MN0207     05 WS-AUTO-GAS-AVAIL-AMT3    PIC 9(5)V99 VALUE ZEROS.
+
+       01  FILLER.
+      **** (WS-POS-AREA) ****
+           03 WS-POS-FLAG          PIC X(01) VALUE 'N'.
+              88 THIS-IS-A-POS-TRANS         VALUE 'Y'.
+              88 THIS-IS-NOT-A-POS-TRANS     VALUE 'N'.
+           03 POS-DRIVER-MESSAGE-AREA.
+              10 FILLER            PIC X(18) VALUE
+                 'OK: DRV. MSG...>  '.
+              10 POS-DRV-MESSAGE   PIC X(80)  VALUE SPACES.
+              10 POS-NRM-MESSAGE   PIC X(120) VALUE SPACES.
+           03 FILLER.
+      *   **** (POS-CUSTOMER-RETURN-AREA) ****
+081414        10 POS-CUSTOMER-NRM-MSG  PIC X(413).
+              10 POS-CUSTOMER-INFO.
+                 15 FILLER             PIC X(6)  VALUE '~CUST:'.
+                 15 POS-CUSTOMER-NAME  PIC X(25).
+                 15 POS-CUSTOMER-CITY  PIC X(15).
+                 15 POS-CUSTOMER-STATE PIC X(02).
+MP1004           15 POS-CUSTOMER-ID-X  PIC X(10).
+           03 WS-SAVE-PRINTER-FLAG PIC X(1)     VALUE SPACES.
+           03 WS-SAVE-POS-SUB-ID   PIC X(1)     VALUE SPACES.
+JS0698     03 WS-SAVE-COM-SITE-ACCT PIC X(5)    VALUE SPACES.
+           03 WS-SAVE-NAME.
+              05 WS-SAVE-NAME-11.
+                 10 FILLER         PIC X(5)   VALUE 'UNIT '.
+                 10 WS-SAVE-NAME-6 PIC X(10)  VALUE SPACES.
+              05 FILLER            PIC X(5)   VALUE ' AND '.
+              05 WS-SAVE-NAME-44   PIC X(44)  VALUE SPACES.
+           03 FILLER.
+      **** (WS-JOIN-FIELDS) ****
+              05 WS-FIELD-LEN-1    PIC S9(4)    COMP SYNC.
+              05 WS-FIELD-LEN-2    PIC S9(4)    COMP SYNC.
+              05 WS-FIELD-LEN-3    PIC S9(4)    COMP SYNC.
+              05 WS-FIELD-3        PIC X(3)     VALUE SPACES.
+              05 WS-FIELD-20       PIC X(20)    VALUE SPACES.
+              05 WS-FIELD-63       PIC X(63)    VALUE SPACES.
+              05 WS-FIELD-60       PIC X(60)    VALUE SPACES.
+              05 WS-FIELD-83       PIC X(83)    VALUE SPACES.
+              05 WS-FIELD-86       PIC X(86)    VALUE SPACES.
+              05 WS-FIELD-39       PIC X(39)    VALUE
+                 '(FP) CARD & DRIVER LISC MUST BE PRESENT'.
+              05 WS-FIELD-125      PIC X(125)   VALUE SPACES.
+              05 WS-CHAR-3         PIC X(3)     VALUE '`1C'.
+              05 WS-FIELD-50       PIC X(50)    VALUE SPACES.
+              05 WS-FIELD-53       PIC X(53)    VALUE SPACES.
+              05 WS-FIELD-72       PIC X(72)    VALUE SPACES.
+              05 WS-TRY-PO-MSG     PIC X(25)    VALUE
+                 '/*(DID YOU ASK FOR PO #)*'.
+           03 WS-PO-PROD-CODE.
+              05 WS-PO-PROD-CODE-N PIC 9(2).
+           03 WS-DATE-1.
+              05 WS-MONTH-1        PIC 9(2).
+              05 WS-DAY-1          PIC 9(2).
+              05 WS-YEAR-1         PIC 9(2).
+           03 FILLER REDEFINES WS-DATE-1.
+              05 WS-GREG-DATE      PIC 9(6).
+              05 FILLER REDEFINES WS-GREG-DATE.
+                 10 WS-GREG-MM     PIC 99.
+                 10 WS-GREG-DD     PIC 99.
+                 10 WS-GREG-YY     PIC 99.
+           03 WS-YYMMDD-DATE       PIC 9(6).
+           03 FILLER REDEFINES WS-YYMMDD-DATE.
+              05 WS-YYMMDD-YY      PIC 99.
+              05 WS-YYMMDD-MM      PIC 99.
+              05 WS-YYMMDD-DD      PIC 99.
+           03 WS-DATE-3.
+              05 WS-MONTH-3        PIC Z9.
+              05 FILLER            PIC X(1)   VALUE '/'.
+              05 WS-DAY-3          PIC 9(2).
+              05 FILLER            PIC X(1)   VALUE '/'.
+              05 WS-YEAR-3         PIC 9(2).
+MP1011 01  WS-DATE-S-AREA.
+MP1011     05 WS-DATE-S                     PIC 9(8).
+MP1011     05 FILLER                        REDEFINES WS-DATE-S.
+MP1011        10 WS-DATE-S-CC               PIC 9(2).
+MP1011        10 WS-DATE-S-YY               PIC 9(2).
+MP1011        10 WS-DATE-S-MM               PIC 9(2).
+MP1011        10 WS-DATE-S-DD               PIC 9(2).
+MP1011     05 WS-UPDT-FLAG                  PIC X(01) VALUE 'N'.
+           03 WS-TIME-1            PIC 9(7).
+           03 FILLER REDEFINES WS-TIME-1.
+              05 FILLER            PIC X.
+              05 WS-HOURS-1        PIC 9(2).
+              05 WS-MINUTES-1      PIC 9(2).
+              05 WS-SECONDS-1      PIC 9(2).
+           03 FILLER REDEFINES WS-TIME-1.
+              05 FILLER            PIC X(1).
+              05 WS-TIME-4         PIC 9(4).
+              05 FILLER            PIC X(2).
+           03 WS-TIME-3.
+              05 WS-HOURS-3        PIC Z9.
+              05 FILLER            PIC X(1)   VALUE ':'.
+              05 WS-MINUTES-3      PIC 9(2).
+              05 FILLER            PIC X(1)   VALUE ':'.
+              05 WS-SECONDS-3      PIC 9(2).
+           03 FILLER.
+      **** (WS-PT-AREA) ****
+              05 WS-PT-AMOUNT         PIC 9(4)V99.
+              05 WS-PT-CHECK-NR       PIC 9(10).
+              05 WS-PT-MESSAGE-FLAG   PIC X.
+
+       01  WORK-DATE              PIC 9(7).
+       01  FILLER REDEFINES WORK-DATE.
+           05  FILLER             PIC 9(2).
+           05  WORK-DATE-X        PIC 9(5).
+       01  WORK-TIME              PIC 9(7).
+       01  FILLER REDEFINES WORK-TIME.
+           05  FILLER             PIC 9(1).
+           05  WORK-TIME-X        PIC 9(5).
+           05  FILLER             PIC 9(1).
+
+       01  ATTACHED-PRINT-RESPONSE.
+           05  FILLER              PIC X(3)     VALUE '>C<'.
+           05  ATT-AUTH-NUMBER     PIC 9(5)     VALUE ZEROES.
+           05  FILLER              PIC X(3)     VALUE '`1C'.
+           05  ATT-CTL-NUMBER      PIC 9(9)     VALUE ZEROES.
+           05  FILLER              PIC X(3)     VALUE '`1C'.
+           05  ATT-TOTAL-ORDER-AMT PIC 9(5)V99  VALUE ZEROES.
+           05  FILLER              PIC X(3)     VALUE '`1C'.
+           05  ATT-INCREMENT-AMT   PIC 9(5)V99  VALUE ZEROES.
+           05  FILLER              PIC X(3)     VALUE '`1C'.
+           05  ATT-DATE            PIC X(8)     VALUE SPACES.
+           05  FILLER              PIC X(3)     VALUE '`1C'.
+           05  ATT-TIME            PIC X(8)     VALUE SPACES.
+           05  FILLER              PIC X(3)     VALUE '`1C'.
+           05  ATT-REMAINDER       PIC X(125)   VALUE SPACES.
+
+CP1011***** FORMAT CHANGED WITH CONTROL NUMBER EXPANSION - BELOW IS NEW
+CP1011****  FORMAT WITH "OLD" FORMAT COMMENTED OUT UNDERNEATCH
+         01 CHECK-ENTRY-COMMON-AREA.
+           03 CHECK-ENTRY-CONTROL  PIC XX VALUE SPACES.
+           03 CHECK-NR-AREA.
+             05 1ST-10-BYTES.
+               07 1ST-10-BYTES-N   PIC 9(10).
+             05 2ND-10-BYTES.
+               07 2ND-10-BYTES-N   PIC 9(10).
+           03 FILLER               REDEFINES CHECK-NR-AREA.
+             05 1ST-9-BYTES.
+               07 1ST-9-BYTES-N    PIC 9(9).
+             05 2ND-9-BYTES        PIC X(9).
+             05 FILLER             PIC X(2).
+           03 FILLER               REDEFINES CHECK-NR-AREA.
+             05 1ST-8-BYTES.
+               07 1ST-8-BYTES-N    PIC 9(8).
+             05 2ND-8-BYTES        PIC X(8).
+             05 FILLER             PIC X(4).
+           03 FILLER               REDEFINES CHECK-NR-AREA.
+             05 1ST-7-BYTES.
+               07 1ST-7-BYTES-N    PIC 9(7).
+             05 2ND-7-BYTES        PIC X(7).
+             05 FILLER             PIC X(6).
+CP1011     03 CHECK-AMOUNT         PIC 9(5)V99 VALUE 0.
+           03 FILLER               PIC XX VALUE SPACES.
+CP1011     03 CHECK-ENTRY-DATA     PIC X(18) VALUE SPACES.
+           03 FILLER               PIC X VALUE SPACES.
+CP1011     03 FILLER               PIC X(20) VALUE SPACES.
+           03 CHECK-ENTRY-CANADIAN-AMT PIC 9(5)V99.
+CP1011     03 FILLER               PIC X(7) VALUE SPACES.
+           03 CHECK-ENTRY-TRAN-ID  PIC X(2).
+CP1011     03 FILLER               PIC X(4) VALUE SPACES.
+           03 CHECK-ENTRY-ONLRCD   PIC X(256) VALUE SPACES.
+           03 CHECK-ENTRY-ORDRFIL  PIC X(212) VALUE SPACES.
+CP1011     03 FILLER               PIC X(4) VALUE SPACES.
+
+         01 FILLER                 REDEFINES CHECK-ENTRY-COMMON-AREA.
+           03 FILLER               PIC XXX.
+           03 CHECK-ENTRY-MESSAGE-1 PIC X(39).
+           03 FILLER               PIC XXX.
+           03 CHECK-ENTRY-MESSAGE-2 PIC X(39).
+
+
+           EJECT
+      ***************************************
+      *    C I C S   O U T P U T   A R E A  *
+      ***************************************
+       01  FILLER.
+           03 OUT-COMENT.
+             05 OUT-COMENT-1       PIC X(40).
+             05 OUT-COMENT-2.
+MP1004          06 FILLER          PIC X(60)     VALUE SPACES.
+                06 OUT-COMENT-2-E.
+                   07 FILLER       PIC X(20).
+             05 FILLER             PIC X.
+             05 OUT-GOLD-MESSAGE   PIC X(79).
+             05 FILLER             REDEFINES OUT-GOLD-MESSAGE.
+                06 OUT-NR-GOLD      PIC ZZZ9.
+                06 FILLER           PIC X.
+                06 OUT-GOLD-GROSS   PIC ZZ,ZZZ.99-.
+                06 FILLER           PIC X(64).
+082008     03 OUT-NR-GALLONS       PIC Z(5).99.
+           03 OUT-PRICE-GALLON     PIC 9.999.
+           03 OUT-TOTAL-COST       PIC ZZZZZ.99.
+
+         01 VOICE-RESPONSE-OUTPUT-AREA.
+           03 VR-TRANS-ID                  PIC XX.
+           03 FILLER                       PIC X.
+           03 VR-REQUEST-ID                PIC X.
+           03 VR-REQUEST-VERSION           PIC X.
+           03 FILLER.
+              05 FILLER                    PIC X(6)     VALUE SPACES.
+              05 VR-CARD-NUMBER-10         PIC X(10).
+           03 VR-TRANS-FLAG                PIC X        VALUE SPACE.
+           03 FILLER                       PIC X(7)     VALUE SPACES.
+           03 FILLER                       PIC X(7)     VALUE SPACES.
+           03 VR-PHONE-LIMIT-FLAG          PIC X        VALUE 'N'.
+           03 FILLER                       PIC X(7)     VALUE SPACES.
+           03 FILLER                       PIC X(7)     VALUE SPACES.
+           03 VR-VRU-CAN-DRAFT             PIC X        VALUE SPACES.
+           03 VR-EXPRESS-BALANCE           PIC 9(6)V99  VALUE ZEROES.
+           03 VR-EXPRESS-BALANCE-AVAIL     PIC 9(6)V99  VALUE ZEROES.
+           03 VR-EXPRESS-BALANCE-CAN       PIC 9(6)V99  VALUE ZEROES.
+           03 VR-EXPRESS-BALANCE-AVAIL-CAN PIC 9(6)V99  VALUE ZEROES.
+           03 VR-CASH-LIMIT-US             PIC 9(6)V99  VALUE ZEROES.
+           03 VR-CASH-LIMIT-CN             PIC 9(6)V99  VALUE ZEROES.
+           03 FILLER                       PIC X(59)    VALUE SPACES.
+           03 USUAL-FP-MESSAGE             PIC X(80).
+
+      *----------------------------------------------------------------*
+      *        OTHER WORK AREAS                                        *
+      *----------------------------------------------------------------*
+
+         01  ALPHA-TABLE.
+             05  ALPHA-CONSTANTS.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YAYB000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YBYC000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YCYD000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YDYE000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YEYF000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YFYG000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YGYH000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YHYI000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YIYJ000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YJYK000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YKYL000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YLYM000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YMYN000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YNYO000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YOYP000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YPYQ000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YQYR000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YRYS000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YSYT000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YTYU000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YUYV000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YVYW000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YWYX000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YXYY000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YYYZ000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YZZA000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'YZZA000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZAZB000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZBZC000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZCZD000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZDZE000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZEZF000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZFZG000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZGZH000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZHZI000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZIZJ000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZJZK000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZKZL000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZLZM000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZMZN000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZNZO000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZOZP000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZPZQ000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZQZR000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZRZS000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZSZT000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZTZU000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZUZV000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZVZW000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZWZX000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZXZY000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZYZZ000'.
+                 10  FILLER           PIC X(07)  VALUE
+                     'ZZYA000'.
+           05  ALPHA-CONSTANTS-TABLE REDEFINES ALPHA-CONSTANTS
+                                     OCCURS 53 TIMES
+                                     ASCENDING KEY IS
+                                       ISBN-TABLE
+                                     INDEXED BY ALPHA-IND.
+               15  ISBN-TABLE         PIC XX.
+               15  ALPHA-TITLE-TABLE.
+                   20  TABLE-ST       PIC XX.
+                   20  TABLE-NR       PIC 999.
+
+           COPY TSFMW003.
+
+101014      03 WRK-TRIP-I-NUMERIC  PIC 9(09).
+
+         01 DCOMP-WORK-AREA.
+            03 FILLER               PIC S9999 COMP.
+            03 FILLER               PIC S9999 COMP.
+            03 FILLER              PIC X(60).
+         01 FILLER.
+      **** (DCOMP-TRIP-AREA) ****
+            03 DCOMP-LENGTH        PIC S9999 COMP.
+            03 DCOMP-TRIP-NR       PIC X(20).
+            03 FILLER              REDEFINES DCOMP-TRIP-NR.
+              05 DCOMP-TRIP-CHAR  PIC X
+                                  OCCURS 20 TIMES
+                                  INDEXED BY DTC-INDEX.
+         01 FILLER.
+      **** (DCOMP-EDIT-AREA) ****
+           03 DCOMP-EDIT-NR       PIC X(10).
+           03 FILLER              REDEFINES DCOMP-EDIT-NR.
+              05 DCOMP-EDIT-CHAR  PIC X
+                                  OCCURS 10 TIMES
+                                  INDEXED BY DEC-INDEX.
+
+         01 DEEDIT-AREA.
+           03 NR-OF-BYTES          PIC S99 VALUE +0.
+           03 NR-OF-DECIMALS       PIC S9 VALUE +0.
+           03 DEEDIT-FIELD         PIC X(10).
+           03 FILLER REDEFINES DEEDIT-FIELD.
+              05 DEEDIT-FIELD-X    PIC ZZZZZ.ZZ.
+              05 FILLER            PIC X(02).
+       01  PLAY-DEEDIT-FLD-N       PIC 9(7)V99.
+       01  FILLER REDEFINES PLAY-DEEDIT-FLD-N.
+           05 PLAY-DEEDIT-FLD-C    PIC X(9).
+
+           EJECT
+      *----------------------------------------------------------------*
+      *            MESSAGES AND COMMENTS                               *
+      *----------------------------------------------------------------*
+
+       01  FILLER.
+      **** (TERM-MESSAGES) ****
+           03 NORMAL-MESSAGE.
+             05 FILLER             PIC X(40) VALUE
+               '*OK..  HAVE T/S ATTENDANT GIVE DRIVER A '.
+             05 FILLER             PIC X(15) VALUE
+               'USI DIRECTORY  '.
+             05 US-CODE-NR         PIC Z(5).
+             05 FILLER             PIC X(20) VALUE SPACES.
+
+           03 I-PRMPT-WORK.
+             05 FILLER             PIC XX VALUE 'I '.
+CP1011       05 FILLER             PIC X(29) VALUE SPACES.
+CP1011       05 I-CTL-NR           PIC 9(7) VALUE 0.
+             05 I-AMT              PIC 9(5)V99 VALUE 0.
+             05 I-TIMIN            PIC 9(4) VALUE 0.
+             05 FILLER             PIC X VALUE SPACES.
+
+           03 OUTPUT-DATA-OK.
+             05 FILER              PIC X(08) VALUE 'OK XMIT-'.
+             05 OUT-NETXMN         PIC ZZ,ZZZ.99-.
+             05 FILLER             PIC X(02) VALUE '#-'.
+CP1011       05 OUT-CTL-NR         PIC 9(07) VALUE 0.
+CP1011       05 FILLER             PIC X(01) VALUE SPACES.
+             05 FILLER             PIC X(06) VALUE 'AUTH#-'.
+             05 OUT-CK-AUTH-NR     PIC 9(04) VALUE 0.
+
+           03 OUTPUT-2ND-LINE.
+             05 FILLER             PIC X(39) VALUE
+               'CHK MUST BE MADE OUT TO DRIVER AND T/S.'.
+             05 FILLER             PIC XXX VALUE SPACES.
+SB0614       05 OUT-TAX-HEAD-A.
+SB0614          10 OUT-TAX-HEAD    PIC X(06) VALUE SPACES.
+SB0614          10 OUT-TAX         PIC Z(5).ZZ.
+SB0614       05 OUT-SURCH-HEAD-B REDEFINES OUT-TAX-HEAD-A.
+SB0614          10 OUT-SURCH-HEAD  PIC X(06).
+SB0614          10 OUT-SURCH       PIC ZZ9.99.
+SB0614          10 FILLER          PIC X(02).
+
+           03 OUTPUT-CAN-DATA-OK.
+             05 FILLER             PIC X(4) VALUE 'OK- '.
+             05 OUT-CAN-NETXMN     PIC ZZ,ZZZ.99-.
+             05 FILLER             PIC X(5)
+                VALUE 'CAN$ '.
+             05 FILLER             PIC XX   VALUE '#-'.
+             05 OUT-CAN-CTL-NR     PIC 9(6) VALUE 0.
+             05 OUT-CAN-BRIDGE     PIC X(3) VALUE SPACES.
+             05 FILLER             PIC X    VALUE SPACES.
+             05 FILLER             PIC X(5) VALUE 'AUTH-'.
+             05 OUT-CAN-CK-AUTH-NR PIC 9(4).
+
+           03 OUTPUT-CAN-2ND-LINE.
+             05 FILLER             PIC X(39) VALUE
+               'CHK MUST BE MADE OUT TO DRIVER AND T/S.'.
+             05 FILLER             PIC XXX VALUE SPACES.
+             05 OUTPUT-CAN-2ND-LINE-COUNTRY   PIC X(2)   VALUE 'US'.
+             05 FILLER             PIC X(13)
+                VALUE ' EQUIVALENT: '.
+             05 OUT-US-NETXMN     PIC ZZ,ZZZ.99-.
+SB0614       05 OUT-CAN-TAX-HEAD-A.
+SB0614          10 OUT-CAN-TAX-HEAD    PIC X(06) VALUE SPACES.
+SB0614          10 OUT-CAN-TAX         PIC Z(4).ZZ.
+SB0614       05 OUT-CAN-SURCH-HEAD-B REDEFINES OUT-CAN-TAX-HEAD-A.
+SB0614          10 OUT-CAN-SURCH-HEAD  PIC X(07).
+SB0614          10 OUT-CAN-SURCH       PIC ZZ9.99.
+
+           03 AUTO-DIAL-MESSAGE.
+             05 FILLER             PIC X(39) VALUE
+               'CHECK IS ON THE WAY                    '.
+
+           03 TRI-STATE-MESSAGE-1.
+             05 FILLER             PIC X(6) VALUE 'DRIVER'.
+             05 FILLER             PIC X VALUE QUOTE.
+             05 FILLER             PIC X(20) VALUE
+                'S CONTROL NUMBER IS '.
+
+           03 TRI-STATE-MESSAGE-2  PIC X(47) VALUE
+             'ENTER THE UNIT NUMBER OF THE TRACTOR..........-'.
+
+           03 OUTPUT-GOLD-OK-1.
+             05 FILLER               PIC XXX VALUE 'OK-'.
+             05 OUT-GOLD-AMT         PIC ZZ,ZZZ.99-.
+             05 FILLER               PIC X(6) VALUE 'REF#- '.
+             05 OUT-GOLD-DAY         PIC 99.
+             05 OUT-GOLD-CTL         PIC 9(7).
+             05 OUT-GOLD-BRIDGE      PIC X(3).
+             05 OUTPUT-GOLD-HD-1     PIC X(09) VALUE '         '.
+SB0614       05 OUT-GOLD-TAX-HD-A.
+SB0614          10 OUT-GOLD-TAX-HEAD    PIC X(06) VALUE SPACES.
+SB0614          10 OUT-GOLD-TAX         PIC Z(5).ZZ.
+SB0614       05 OUT-GOLD-SURCH-HD-B REDEFINES OUT-GOLD-TAX-HD-A.
+SB0614          10 OUT-GOLD-SURCH-HEAD  PIC X(06).
+SB0614          10 OUT-GOLD-SURCH       PIC ZZ9.99.
+SB0614          10 FILLER               PIC X(02).
+
+           03 OUTPUT-GOLD-OK-2.
+             05 FILLER           PIC X(26) VALUE
+                                 '*===DO NOT WRITE A CHECK!!'.
+             05 OUTPUT-GOLD-HD-2 PIC X(29) VALUE
+                                 ' DRIVER MUST SIGN INVOICE===*'.
+           03 NEW-OUTPUT-GOLD-OK-2.
+             05 FILLER           PIC X(50) VALUE
+             'PLEASE HAVE DRIVER SIGN INVOICE, YOUR TRANSACTION '.
+             05 FILLER           PIC X(10) VALUE
+             'NUMBER IS '.
+             05 NEW-OUTPUT-DAY   PIC 99    VALUE ZEROS.
+             05 NEW-OUTPUT-TRAN  PIC 9(7)  VALUE ZEROS.
+             05 FILLER           PIC X(10) VALUE SPACES.
+
+           03 OK-G                             PIC X(40) VALUE
+              'OK...G'.
+           03 OK-MSG1                          PIC X(40) VALUE
+              '*OK..'.
+           03 OK-MSG2                          PIC X(40) VALUE
+              'OK...'.
+           03 OK-S                             PIC X(40) VALUE
+              'OK...S'.
+           03 SEE-PRINTER                      PIC X(40) VALUE
+              'SEE PRINTER'.
+           03 WS-CANCEL-GALLONS                PIC 9(5)V99.
+           03 WS-CANCEL-COST                   PIC 9(5)V99.
+           03 TRANS-CANCELLED-2.
+              05 FILLER.
+                 10 FILLER                     PIC X(01) VALUE ' '.
+                 10 FILLER                     PIC X(17) VALUE
+                    'TRANS. CANCELLED '.
+              05 FILLER.
+                 10 FILLER                     PIC X(01) VALUE ' '.
+                 10 CANCEL-GAL-LIT             PIC X(09) VALUE
+                    'GALLONS: '.
+                 10 CANCEL-GALLONS             PIC 9(5).99.
+              05 FILLER.
+                 10 FILLER                     PIC X(01) VALUE ' '.
+                 10 FILLER                     PIC X(09) VALUE
+                    ' AMOUNT: '.
+                 10 CANCEL-COST                PIC 9(5).99.
+           03 TRANSACTION-RECORDED             PIC X(40) VALUE
+              'TRANSACTION RECORDED'.
+           03 THANK-YOU                        PIC X(40) VALUE
+              'THANK YOU'.
+JS1199     03 WS-FLEET-RESPONSE.
+JS1199        10 WS-FR-CODE                    PIC 9(05).
+JS1199        10 WS-FR-ACCT                    PIC X(05).
+MP1004        10 WS-FR-CUST                    PIC X(10).
+JS1199        10 WS-FR-AMT                     PIC 9(05)V99.
+JS1199        10 WS-FR-CONTROL-NR              PIC 9(06).
+JS1199        10 WS-FR-EXP-DATE                PIC 9(04).
+JS1199        10 WS-FR-CARD-BLOCKED            PIC X(01).
+JS1199        10 WS-FR-MESSAGE                 PIC X(80).
+
+JS0303     03 WS-BATCH-FUEL-RESPONSE.
+JS0303        10 WS-BF-MESSAGE                 PIC X(80).
+JS0303        10 WS-BF-CONTROL-NR              PIC 9(09).
+CC0803        10 WS-BF-FMLOG-RK-DATE           PIC 9(07).
+
+           03 POS-OKG-LARGE.
+              05 FILLER                     PIC X(04) VALUE 'CTL#'.
+              05 POS-OKGL-CTL               PIC 9(06).
+              05 POS-OKGL-BRIDGE            PIC X(03).
+JS0907        05 FILLER                     PIC X(02) VALUE ' $'.
+JS0907        05 POS-OKGL-AMT               PIC ZZZZZ9.99.
+JS0699        05 POS-OKGL-TAX-HEAD          PIC X(06) VALUE SPACES.
+JS0699        05 POS-OKGL-TAX               PIC ZZZZZ.ZZ.
+           03 POS-OK-TERMINAL.
+              05 FILLER.
+                 10 FILLER                  PIC X(01) VALUE ' '.
+                 10 FILLER                  PIC X(06) VALUE 'CNTL#:'.
+                 10 FILLER.
+                    15 POS-OKT-CTL-DD       PIC 9(02).
+                    15 POS-OKT-CTL          PIC 9(06).
+              05 FILLER.
+                 10 FILLER                  PIC X(01) VALUE ' '.
+                 10 FILLER                  PIC X(09) VALUE 'GALLONS: '.
+                 10 POS-OKT-GALLONS         PIC 9(5).99.
+              05 FILLER.
+                 10 FILLER                  PIC X(01) VALUE ' '.
+                 10 FILLER                  PIC X(09) VALUE 'AMOUNT: '.
+                 10 POS-OKT-AMOUNT          PIC 9(5).99.
+              05 FILLER.
+                 10 FILLER                  PIC X(07) VALUE ' DATE: '.
+                 10 POS-OKT-DATE            PIC X(8).
+                 10 FILLER                  PIC X(07) VALUE ' TIME: '.
+                 10 POS-OKT-TIME            PIC X(8).
+
+           03 POS-OK.
+              05 FILLER                     PIC X(06) VALUE 'AMOUNT'.
+              05 POS-OK-AMT                 PIC ZZ,ZZZ.99-.
+              05 FILLER                     PIC X(10) VALUE ' CTL#-'.
+              05 POS-OK-CTL                 PIC 9(6).
+              05 FILLER                     PIC X(7) VALUE ' AUTH#-'.
+              05 POS-OK-AUTH                PIC 9(4).
+JS0699        05 POS-OK-TAX-HEAD            PIC X(06).
+082008        05 POS-OK-TAX                 PIC Z(5).ZZ.
+           03 POS-OK-EXPANDED.
+              05 FILLER.
+                 10 FILLER                  PIC X(01) VALUE ' '.
+                 10 FILLER                  PIC X(04) VALUE 'CTL#'.
+                 10 FILLER.
+                    15 POS-OKX-CTL          PIC 9(06).
+                    15 POS-OKX-XTN-TYPE     PIC X(03) VALUE SPACES.
+              05 FILLER.
+                 10 FILLER                  PIC X(11)
+JS0903              VALUE ' NET AMOUNT'.
+JS0903           10 POS-OKX-NET             PIC $$$$$9.99.
+              05 FILLER.
+                 10 FILLER                  PIC X(18)
+                    VALUE ' - FEE REDUCED BY '.
+082008           10 POS-OKX-FEE-DEDUCT      PIC 9(5).99.
+JS0699        05 FILLER.
+JS0699           10 POS-OKX-TAX-HEAD        PIC X(06) VALUE SPACES.
+082008           10 POS-OKX-TAX             PIC Z(5).ZZ.
+           03 POS-OK-DISCOUNT.
+              05 FILLER.
+                 10 FILLER                  PIC X(01) VALUE ' '.
+                 10 FILLER                  PIC X(04) VALUE 'CTL#'.
+                 10 FILLER.
+                    15 POS-OKD-CTL          PIC 9(06).
+                    15 POS-OKD-XTN-TYPE     PIC X(03) VALUE SPACES.
+              05 FILLER.
+                 10 FILLER                  PIC X(11)
+JS0903              VALUE ' NET AMOUNT'.
+JS0903           10 POS-OKD-NET             PIC $$$$$9.99.
+JS0699        05 FILLER.
+JS0699           10 POS-OKD-TAX-HEAD        PIC X(06) VALUE SPACES.
+082008           10 POS-OKD-TAX             PIC Z(5).ZZ.
+           03 POS-OK-FEE.
+              05 FILLER.
+                 10 FILLER                  PIC X(01) VALUE ' '.
+                 10 FILLER                  PIC X(04) VALUE 'CTL#'.
+                 10 FILLER.
+                    15 POS-OKF-CTL          PIC 9(06).
+                    15 POS-OKF-XTN-TYPE     PIC X(03) VALUE SPACES.
+              05 FILLER.
+                 10 FILLER                  PIC X(18)
+                    VALUE ' - FEE REDUCED BY '.
+082008           10 POS-OKF-FEE-DEDUCT      PIC 9(5).99.
+JS0699        05 FILLER.
+JS0699           10 POS-OKF-TAX-HEAD        PIC X(06) VALUE SPACES.
+082008           10 POS-OKF-TAX             PIC Z(5).ZZ.
+           03 POS-SETTLE-OK.
+JS0903        05 FILLER                     PIC X(07) VALUE 'CHK AMT'.
+JS0903        05 POS-SETTLE-AMT             PIC $$$$$9.99.
+              05 FILLER                     PIC X(8) VALUE ' AUTH# '.
+              05 POS-SETTLE-AUTH            PIC 9(4).
+              05 FILLER                     PIC X(4) VALUE SPACES.
+              05 FILLER                     PIC X(11) VALUE
+                 ' XTN CNT -'.
+              05 POS-SETTLE-CNT             PIC ZZZZ9.
+              05 FILLER                     PIC X(11) VALUE
+                 '  XTN TOT '.
+              05 POS-SETTLE-TOT             PIC $$,$$9.99-.
+MP1001     03 EMAIL-OK-RESP.
+MP1001        05  EOR-ACCT-CODE             PIC X(10).
+MP1001        05  EOR-CUST-ID               PIC X(10).
+MP1001        05  EOR-CTL-NR                PIC 9(6).
+
+      ******************************************************************
+      *  TRANSACTION RESPONSES.  (ERRORS ONLY)                         *
+      ******************************************************************
+
+       01  FILLER.
+      **** (TRANSACTION-MESSAGES) ****
+           05 CALL-COMPANY-MSG.
+              10  FILLER                    PIC X(21) VALUE
+              'CALL COMPANY - ERROR '.
+              10  CALL-COMPANY-NBR          PIC 9(3)  VALUE ZEROS.
+
+           05 NEW-OUT-MESSAGE.
+              10  NEW-OUT-MSG1              PIC X(40) VALUE SPACES.
+              10  NEW-OUT-MSG2              PIC X(79) VALUE SPACES.
+
+           05 NO-MSG-NBR                    PIC 9(3)  VALUE 002.
+           05 INVALID-UNIT-NR-NBR           PIC 9(3)  VALUE 030.
+           05 CUST-NOT-ACTIVE-NBR           PIC 9(3)  VALUE 088.
+           05 INACTIVE-CARD-NBR             PIC 9(3)  VALUE 054.
+           05 INVALID-DL-NBR                PIC 9(3)  VALUE 056.
+           05 INVALID-RATE-NBR              PIC 9(3)  VALUE 084.
+           05 INVALID-TRIP-NR-NBR           PIC 9(3)  VALUE 022.
+           05 FUEL-NOT-ALLOWED-NBR          PIC 9(3)  VALUE 052.
+           05 ID-MISSING-NBR                PIC 9(3)  VALUE 086.
+           05 PURCHASE-NOT-ALLOWED-NBR      PIC 9(3)  VALUE 042.
+           05 ALLOWANCE-EXCEEDED-NBR        PIC 9(3)  VALUE 044.
+           05 MAX-DAILY-NBR                 PIC 9(3)  VALUE 046.
+           05 CARD-BLOCKED-NBR              PIC 9(3)  VALUE 048.
+           05 LIMIT-EXCEEDED-NBR            PIC 9(3)  VALUE 058.
+           05 HUB-READING-NBR               PIC 9(3)  VALUE 060.
+           05 TRIP-ALLOW-EXCEEDED-NBR       PIC 9(3)  VALUE 050.
+
+           05 SETTLE-NOT-POSSIBLE-N         PIC S9(5) COMP-3 VALUE +01.
+           05 SETTLE-NOT-POSSIBLE           PIC X(40) VALUE
+              '001 SETTLEMENT NOT POSSIBLE'.
+
+           05 DRIVER-MAY-NOT-FUEL-NO-PROD-N PIC S9(5) COMP-3 VALUE +02.
+           05 DRIVER-MAY-NOT-FUEL-NO-PROD.
+              10 FILLER                     PIC X(40) VALUE
+                 'DRIVER MAY NOT FUEL HERE'.
+              10 FILLER                     PIC X(80) VALUE
+                 'NO PRODUCTS ARE AVAILABLE'.
+
+           05 DRIVER-MAY-NOT-PURC-PROD-N    PIC S9(5) COMP-3 VALUE +03.
+           05 DRIVER-MAY-NOT-PURC-PROD.
+              10 FILLER                     PIC X(40) VALUE
+                 'THIS DRIVER MAY NOT PURCHASE'.
+              10 FILLER                     PIC X(80) VALUE
+                 'THIS PRODUCT'.
+
+           05 MUST-ANSWER-Y-N-N             PIC S9(5) COMP-3 VALUE +04.
+           05 MUST-ANSWER-Y-N               PIC X(40) VALUE
+              'YOU MUST ANSWER Y OR N'.
+
+           05 MUST-ENTER-CHECK-N            PIC S9(5) COMP-3 VALUE +05.
+           05 MUST-ENTER-CHECK              PIC X(40) VALUE
+              'YOU MUST ENTER A CHECK NR'.
+
+           05 INVALID-CHECK-NR-N            PIC S9(5) COMP-3 VALUE +06.
+           05 INVALID-CHECK-NR              PIC X(40) VALUE
+              'INVALID CHECK NUMBER'.
+           05 INVALID-CAN-CHECK-NR          PIC X(40) VALUE
+              'INVALID CANADIAN CHECK NUMBER'.
+           05 INVALID-US-CHECK-NR           PIC X(40) VALUE
+              'INVALID US CHECK NUMBER'.
+
+           05 VERIFY-PRODUCTS-N             PIC S9(5) COMP-3 VALUE +07.
+           05 VERIFY-PRODUCTS               PIC X(40) VALUE
+              'VERIFY PRODUCTS..'.
+
+           05 VERIFY-PRODUCTS-DUP-N         PIC S9(5) COMP-3 VALUE +07.
+           05 VERIFY-PRODUCTS-DUP           PIC X(40) VALUE
+              'DUPLICATE PRODUCT ENTERED'.
+
+           05 INVALID-AMOUNT-ENTERED-N      PIC S9(5) COMP-3 VALUE +08.
+           05 INVALID-AMOUNT-ENTERED        PIC X(40) VALUE
+              'INVALID AMOUNT ENTERED.'.
+
+           05 INVALID-NUM-VALUE-N           PIC S9(5) COMP-3 VALUE +08.
+           05 INVALID-NUM-VALUE             PIC X(40) VALUE
+              'INVALID NUMERIC VALUE ENTERED'.
+           05 INVALID-NUM-VALUE2            PIC X(40) VALUE
+              'MAX QTY/AMOUNT EXCEEDED      '.
+
+           05 INVALID-PRODUCT-CODE-N        PIC S9(5) COMP-3 VALUE +09.
+           05 INVALID-PRODUCT-CODE          PIC X(40) VALUE
+              'INVALID PRODUCT CODE'.
+
+           05 PRODUCT-ALLOWANCE-EXCEEDED-N  PIC S9(5) COMP-3 VALUE +10.
+           05 PRODUCT-ALLOWANCE-EXCEEDED    PIC X(40) VALUE
+              'PRODUCT ALLOWANCE EXCEEDED'.
+
+           05 MAX-DAILY-PROD-PURC-N         PIC S9(5) COMP-3 VALUE +11.
+           05 MAX-DAILY-PROD-PURC.
+              10 FILLER                     PIC X(40) VALUE
+                 'MAXIMUM DAILY PRODUCT PURCHASE'.
+              10 FILLER                     PIC X(40) VALUE
+                 'EXCEEDED'.
+
+           05 INVALID-CARD-NR-N             PIC S9(5) COMP-3 VALUE +12.
+           05 INVALID-CARD-NR               PIC X(40) VALUE
+              'INVALID CARD NR'.
+
+DR0121     05 INVALID-CVC1-N                PIC S9(5) COMP-3
+DR0121                                                     VALUE +1557.
+DR0121     05 INVALID-CVC1                  PIC X(40) VALUE
+DR0121        'INVALID CVC1 ON CARD'.
+
+           05 INVALID-RESP-QUERY-N          PIC S9(5) COMP-3 VALUE +13.
+           05 INVALID-RESP-QUERY            PIC X(40) VALUE
+              'INVALID RESPONSE TO QUERY'.
+
+           05 CHECK-ENTRY-ERROR-N           PIC S9(5) COMP-3 VALUE +14.
+           05 CHECK-ENTRY-ERROR             PIC X(40) VALUE
+              'CHECK ENTRY ERROR'.
+
+           05 SYSTEM-UNDER-INQUIRY-N        PIC S9(5) COMP-3 VALUE +15.
+           05 SYSTEM-UNDER-INQUIRY          PIC X(40) VALUE
+              'SYSTEM UNDER INQUIRY'.
+           05 NEW-SYSTEM-UNDER-INQUIRY      PIC X(40) VALUE
+              'SYSTEM UNDER INQUIRY, USE FORMS SCREEN  '.
+
+           05 ID-NR-MISSING-N               PIC S9(5) COMP-3 VALUE +16.
+           05 ID-NR-MISSING                 PIC X(40) VALUE
+              'ID NR IS MISSING OR INVALID'.
+
+           05 TS-IS-INVALID-N               PIC S9(5) COMP-3 VALUE +17.
+           05 TS-IS-INVALID                 PIC X(40) VALUE
+              'T/S IS INVALID'.
+MP0706     05  IN-NETW-TS-INVALID-N         PIC S9(5) VALUE +17 COMP-3.
+MP0706     05  IN-NETW-TS-INVALID           PIC X(40)
+MP0706                               VALUE 'BUSSINESS TYPE IS INVALID'.
+           05 YCODE-IS-INVALID              PIC X(40) VALUE
+              'YCODE NOT ALLOWED'.
+
+           05 DO-NOT-HONOR-N                PIC S9(5) COMP-3 VALUE +18.
+           05 DO-NOT-HONOR                  PIC X(40) VALUE
+              'DO NOT HONOR'.
+
+           05 NEW-DO-NOT-HONOR1             PIC X(40) VALUE
+              'FUEL SCREEN BLOCKED                     '.
+           05 NEW-DO-NOT-HONOR2.
+              10 FILLER                     PIC X(21) VALUE
+              'CALL COMPANY - ERROR '.
+              10 NEW-DO-NOT-HONOR-NBR       PIC 9(3)  VALUE ZEROS.
+              10 FILLER                     PIC X(55) VALUE SPACES.
+
+071509***** THIS OBSOLETE MESSAGE REUSED FOR VIRTUAL CARD MESSAGE
+071509     05 VIRTUAL-CARD-NOT-ALLOWED-N    PIC S9(5) COMP-3 VALUE +19.
+071509     05 VIRTUAL-CARD-NOT-ALLOWED      PIC X(40) VALUE
+071509        'VIRTUAL CARD NOT ALLOWED'.
+
+           05 TERMINAL-FUEL-NOT-ALLOWED-N   PIC S9(5) COMP-3 VALUE +449.
+           05 TERMINAL-FUEL-NOT-ALLOWED     PIC X(40) VALUE
+              'TERMINAL FUEL NOT ALLOWED'.
+
+           05 TRIP-ALLOW-EXCEEDED-N         PIC S9(5) COMP-3 VALUE +20.
+           05 TRIP-ALLOW-EXCEEDED.
+              10 FILLER                     PIC X(40) VALUE
+                 'CONTACT SUPERVISOR:'.
+              10 FILLER                     PIC X(80) VALUE
+                 'TRIP ALLOWANCE HAS BEEN EXCEEDED'.
+
+           05 DRIVER-MAY-NOT-FUEL-HERE-N    PIC S9(5) COMP-3 VALUE +21.
+           05 DRIVER-MAY-NOT-FUEL-HERE      PIC X(40) VALUE
+              'DRIVER MAY NOT FUEL HERE'.
+
+           05 DRIVER-MAY-NOT-FUEL-CNET.
+              10 FILLER                     PIC X(40) VALUE
+                 'DRIVER MAY NOT FUEL HERE'.
+              10 FILLER                     PIC X(80) VALUE
+                 'USING LIMITED NETWORK BY CARD'.
+
+           05 CHECK-NR-BIGGER-N             PIC S9(5) COMP-3 VALUE +22.
+           05 CHECK-NR-BIGGER.
+              10 FILLER                     PIC X(40) VALUE
+                 'BEFORE YOU MAY MOVE ON TO "BIGGER AND'.
+              10 FILLER                     PIC X(80) VALUE
+                 'BETTER" THINGS, YOU MUST ENTER THE CHECK'.
+
+           05 YOU-ARE-RELEASED-N            PIC S9(5) COMP-3 VALUE +23.
+           05 YOU-ARE-RELEASED              PIC X(40) VALUE
+              'YOU ARE RELEASED'.
+
+           05 INVALID-RESP-MSG-QUERY-N      PIC S9(5) COMP-3 VALUE +24.
+           05 INVALID-RESP-MSG-QUERY.
+              10 FILLER                     PIC X(40) VALUE
+                 'INVALID RESPONSE TO MESSAGE QUERY'.
+              10 FILLER                     PIC X(80) VALUE
+                 'CORRECT AND RETRY'.
+
+           05 INVOICE-NR-REQUIRED-N         PIC S9(5) COMP-3 VALUE +25.
+           05 INVOICE-NR-REQUIRED           PIC X(40) VALUE
+              'INVOICE NR REQUIRED'.
+
+           05 INVOICE-NR-INVALID-N          PIC S9(5) COMP-3 VALUE +25.
+           05 INVOICE-NR-INVALID            PIC X(40) VALUE
+              'INVOICE NR MUST BE NUMERIC'.
+
+           05 CC-INVOICE-NR-INVALID-N       PIC S9(5) COMP-3 VALUE +25.
+           05 CC-INVOICE-NR-INVALID         PIC X(40) VALUE
+              'INVOICE NR IS DUPLICATE OF LAST TRANS.'.
+           05 FILLER                        PIC X(20) VALUE
+              'REFER TO CONTROL #: '.
+           05 CC-INVOICE-NR-CTL             PIC 9(7).
+
+           05 FUEL-NOT-ALLOWED-N            PIC S9(5) COMP-3 VALUE +26.
+           05 FUEL-NOT-ALLOWED              PIC X(40) VALUE
+              'FUEL NOT ALLOWED AT THIS LOCATION'.
+           05 FUEL-NOT-ALLOWED2             PIC X(40) VALUE
+              'FUEL NOT ALLOWED'.
+
+           05 OIL-NOT-ALLOWED-N             PIC S9(5) COMP-3 VALUE +27.
+           05 OIL-NOT-ALLOWED               PIC X(40) VALUE
+              'OIL NOT ALLOWED AT THIS LOCATION'.
+           05 OIL-NOT-ALLOWED2              PIC X(40) VALUE
+              'OIL NOT ALLOWED'.
+
+           05 CASH-NOT-ALLOWED-N            PIC S9(5) COMP-3 VALUE +28.
+           05 CASH-NOT-ALLOWED              PIC X(40) VALUE
+              'CASH NOT ALLOWED AT THIS LOCATION'.
+           05 CASH-NOT-ALLOWED2             PIC X(40) VALUE
+              'CASH NOT ALLOWED'.
+
+           05 PROD-NOT-ALLOWED-N            PIC S9(5) COMP-3 VALUE +29.
+           05 PROD-NOT-ALLOWED              PIC X(40) VALUE
+              'PRODUCTS NOT ALLOWED AT THIS LOCATION'.
+           05 PROD-NOT-ALLOWED2             PIC X(40) VALUE
+              'PRODUCTS NOT ALLOWED'.
+
+           05 TRIP-NR-REQUIRED-N            PIC S9(5) COMP-3 VALUE +30.
+           05 TRIP-NR-REQUIRED              PIC X(40) VALUE
+              'TRIP NR IS REQUIRED TO PROCEED'.
+
+           05 TRIP-NR-INVALID-N             PIC S9(5) COMP-3 VALUE +31.
+           05 TRIP-NR-INVALID               PIC X(40) VALUE
+              'TRIP NR IS INVALID'.
+
+           05 INVALID-CHAR-IN-NAME-N        PIC S9(5) COMP-3 VALUE +32.
+           05 INVALID-CHAR-IN-NAME          PIC X(40) VALUE
+              'INVALID CHARACTER IN DRIVER NAME'.
+
+           05 MAX-PURC-MNX-DRIVER-N         PIC S9(5) COMP-3 VALUE +33.
+           05 MAX-PURC-MNX-DRIVER.
+              10 FILLER                     PIC X(40) VALUE
+                 'CONTACT SUPERVISOR: MAXIMUM PURCHASE'.
+              10 FILLER                     PIC X(80) VALUE
+                 'AMOUUNT FOR MNX DRIVER EXCEEDED'.
+
+           05 NEW-MAX-PURC-MNX-DRIVER       PIC X(40) VALUE
+              'MNX DRIVER MAY ONLY HAVE A $60 PURCHASE '.
+
+           05 INVOICE-TOTAL-ERROR-N         PIC S9(5) COMP-3 VALUE +34.
+           05 INVOICE-TOTAL-ERROR.
+              10 FILLER                     PIC X(40) VALUE
+                 'INVOICE DETAIL AMOUNTS DOES NOT'.
+              10 FILLER                     PIC X(80) VALUE
+                 'MATCH EXPECTED TOTAL'.
+
+           05 INVALID-RATE-CODE-N           PIC S9(5) COMP-3 VALUE +35.
+           05 INVALID-RATE-CODE             PIC X(40) VALUE
+              'INVALID RATE CODE'.
+
+           05 CTL-NR-MAX-N                  PIC S9(5) COMP-3 VALUE +36.
+           05 CTL-NR-MAX                    PIC X(40) VALUE
+              'CTL # EXCEEDES MAXIMUM'.
+
+           05 INVALID-CANCEL-REQ-N          PIC S9(5) COMP-3 VALUE +37.
+           05 INVALID-CANCEL-REQ            PIC X(40) VALUE
+              'INVALID CANCEL REQUEST'.
+
+           05 INVALID-ID-NR-N               PIC S9(5) COMP-3 VALUE +38.
+           05 INVALID-ID-NR                 PIC X(40) VALUE
+              'INVALID ID NR'.
+
+CP1011     05 CALL-TO-CANCEL-N            PIC S9(5) COMP-3 VALUE +1165.
+CP1011     05 CALL-TO-CANCEL              PIC X(40) VALUE
+CP1011        'PLEASE CALL COMDATA FOR CANCELLATION'.
+
+           05 TRANS-ALREADY-CANCELLED-N     PIC S9(5) COMP-3 VALUE +39.
+           05 TRANS-ALREADY-CANCELLED       PIC X(40) VALUE
+              'THIS TRANS ALREADY CANCELLED'.
+
+           05 RECORD-MISMATCH-N             PIC S9(5) COMP-3 VALUE +40.
+           05 RECORD-MISMATCH               PIC X(40) VALUE
+              'RECORD MISMATCH: CANCEL NOT POSSIBLE'.
+
+           05 INVALID-TRANS-NR-N            PIC S9(5) COMP-3 VALUE +41.
+           05 INVALID-TRANS-NR              PIC X(40) VALUE
+              'INVALID TRANS NR'.
+
+           05 INVALID-TRANS-NR-TS-N         PIC S9(5) COMP-3 VALUE +42.
+           05 INVALID-TRANS-NR-TS           PIC X(40) VALUE
+              'INVALID TRANS NR / TSCODE'.
+
+           05 TRANSACTION-PURGED-N          PIC S9(5) COMP-3 VALUE +43.
+           05 TRANSACTION-PURGED            PIC X(40) VALUE
+              'TRANSACTION PURGED'.
+
+           05 FUNCTION-COMPLETE-N           PIC S9(5) COMP-3 VALUE +44.
+           05 FUNCTION-COMPLETE             PIC X(40) VALUE
+              'FUNCTION COMPLETE'.
+
+           05 INACTIVE-CARD-N               PIC S9(5) COMP-3 VALUE +45.
+           05 INACTIVE-CARD                 PIC X(40) VALUE
+              'INACTIVE CARD'.
+
+           05 MUST-USE-IN-STATION-N         PIC S9(5) COMP-3 VALUE +46.
+           05 MUST-USE-IN-STATION           PIC X(40) VALUE
+              'MUST USE IN-STATION CARD'.
+
+           05 INVALID-DL-N                  PIC S9(5) COMP-3 VALUE +47.
+           05 INVALID-DL                    PIC X(40) VALUE
+              'INVALID DL#'.
+
+           05 NOT-INSTATION-N               PIC S9(5) COMP-3 VALUE +48.
+           05 NOT-INSTATION                 PIC X(40) VALUE
+              'NOT IN-STATION CARD'.
+           05 NEW-NOT-INSTATION1            PIC X(40) VALUE
+              'CONTACT SUPERVISTOR                     '.
+           05 NEW-NOT-INSTATION2.
+              10  FILLER                    PIC X(40) VALUE
+              'IN-STATION CARD FLAGGED WRONG           '.
+              10  FILLER                    PIC X(39) VALUE SPACES.
+
+           05 IN-STATION-PURC-NOT-ALLOWED-N PIC S9(5) COMP-3 VALUE +49.
+           05 IN-STATION-PURC-NOT-ALLOWED   PIC X(40) VALUE
+              'IN STATION CARD - PURCHASE NOT ALLOWED'.
+
+           05 CUST-NOT-ACTIVE-N             PIC S9(5) COMP-3 VALUE +50.
+           05 CUST-NOT-ACTIVE               PIC X(40) VALUE
+              'CUSTOMER NOT ACTIVE'.
+
+           05 INVALID-UNIT-NR-N             PIC S9(5) COMP-3 VALUE +51.
+           05 INVALID-UNIT-NR               PIC X(40) VALUE
+              'INVALID UNIT NR'.
+
+           05 INVALID-UNIT-NR-LEN-N         PIC S9(5) COMP-3 VALUE +51.
+           05 INVALID-UNIT-NR-LEN           PIC X(40) VALUE
+              'INVALID UNIT NR - INVALID LENGTH'.
+
+           05 CUST-NOT-ON-FUEL-N            PIC S9(5) COMP-3 VALUE +52.
+           05 CUST-NOT-ON-FUEL              PIC X(40) VALUE
+              'CUSTOMER NOT SET UP FOR FUEL PROGRAM'.
+
+           05 CARD-NOT-ON-FUEL-N            PIC S9(5) COMP-3 VALUE +52.
+           05 CARD-NOT-ON-FUEL              PIC X(40) VALUE
+              'CARD IS NOT SET UP FOR FUEL PROGRAM'.
+
+           05 NEW-CUST-NOT-ON-FUEL1         PIC X(40) VALUE
+              'PLEASE CALL VOICE RESPONSE              '.
+           05 NEW-CUST-NOT-ON-FUEL2.
+              10 FILLER                     PIC X(23) VALUE
+              '- GIVE THE PHONE NUMBER'.
+              10 FILLER                     PIC X(56) VALUE SPACES.
+
+           05 NEW-CARD-NOT-ON-FUEL1         PIC X(40) VALUE
+              'PLEASE CALL VOICE RESPONSE              '.
+           05 NEW-CARD-NOT-ON-FUEL2.
+              10 FILLER                     PIC X(23) VALUE
+              '- GIVE THE PHONE NUMBER'.
+              10 FILLER                     PIC X(56) VALUE SPACES.
+
+           05 CUST-RECORD-NOT-FOUND-N       PIC S9(5) COMP-3 VALUE +53.
+           05 CUST-RECORD-NOT-FOUND         PIC X(40) VALUE
+              'CUSTOMER RECORD NOT FOUND'.
+
+           05 INACTIVE-DRIVER-N             PIC S9(5) COMP-3 VALUE +54.
+           05 INACTIVE-DRIVER               PIC X(40) VALUE
+              'INACTIVE DRIVER'.
+
+           05 ENTER-PROPER-TS-PHONE-N       PIC S9(5) COMP-3 VALUE +55.
+           05 ENTER-PROPER-TS-PHONE         PIC X(40) VALUE
+              'ENTER PROPER T/S PHONE NR'.
+
+           05 INACTIVE-LOCATION-N           PIC S9(5) COMP-3 VALUE +464.
+           05 INACTIVE-LOCATION             PIC X(40) VALUE
+              'THIS LOCATION IS NOT ACTIVE'.
+
+           05 UNAUTHORIZED-TERM-N           PIC S9(5) COMP-3 VALUE +56.
+           05 UNAUTHORIZED-TERM             PIC X(40) VALUE
+              'UNAUTHORIZED TERMINAL'.
+
+           05 THIS-CARD-MUST-CALL-N         PIC S9(5) COMP-3 VALUE +57.
+           05 THIS-CARD-MUST-CALL           PIC X(40) VALUE
+              'THIS CARD MUST CALL'.
+
+           05 CANCEL-MUST-CALL-N            PIC S9(5) COMP-3 VALUE +603.
+           05 CANCEL-MUST-CALL              PIC X(40) VALUE
+              'CAN NOT CANCEL XTN AFTER 2 HOURS'.
+
+           05 DAILY-LIMIT-EXCEEDED-N        PIC S9(5) COMP-3 VALUE +58.
+           05 DAILY-LIMIT-EXCEEDED          PIC X(40) VALUE
+              'DAILY LIMIT EXCEEDED'.
+
+           05 CASH-ADVANCE-NOT-AVAIL-N      PIC S9(5) COMP-3 VALUE +59.
+           05 CASH-ADVANCE-NOT-AVAIL        PIC X(40) VALUE
+              'CASH ADVANCE NOT AVAILABLE'.
+
+           05 NO-OIL-THIS-UNIT-N            PIC S9(5) COMP-3 VALUE +60.
+           05 NO-OIL-THIS-UNIT              PIC X(40) VALUE
+              'NO OIL THIS UNIT'.
+
+           05 PROD-CODES-NOT-ALLOWED-N      PIC S9(5) COMP-3 VALUE +61.
+           05 PROD-CODES-NOT-ALLOWED        PIC X(40) VALUE
+              'PRODUCT CODES NOT ALLOWED'.
+
+           05 AUTO-DIAL-DOWN-N              PIC S9(5) COMP-3 VALUE +62.
+           05 AUTO-DIAL-DOWN                PIC X(40) VALUE
+              'AUTO DIAL IS DOWN'.
+
+           05 FUEL-PRICE-ERR-N              PIC S9(5) COMP-3 VALUE +63.
+           05 FUEL-PRICE-ERR                PIC X(40) VALUE
+              'FUEL PRICE ERROR'.
+
+           05 FUEL-PRICE-ERR-CREDIT-N       PIC S9(5) COMP-3 VALUE +621.
+           05 FUEL-PRICE-ERR-CREDIT         PIC X(40) VALUE
+              'FUEL PRICE ERROR, USE CREDIT PRICE'.
+
+           05 NEW-FUEL-PRICE-ERR1           PIC X(17) VALUE
+              'FUEL PRICE ERROR '.
+           05 NEW-FUEL-PRICE-TYPE           PIC X(23) VALUE '(CASH)'.
+           05 NEW-FUEL-PRICE-ERR2.
+              10 FILLER                     PIC X(42) VALUE
+              'PRESS "F5" TO UPDATE T/S, RE-ENTER ORDER, '.
+              10 FILLER                     PIC X(22) VALUE
+              'PRESS "F7" TO OVERRIDE'.
+              10 FILLER                     PIC X(15) VALUE SPACES.
+
+           05 ZERO-OR-NEG-N                 PIC S9(5) COMP-3 VALUE +64.
+           05 ZERO-OR-NEG                   PIC X(40) VALUE
+              'ZERO OR NEGATIVE AMT ENTERED'.
+
+           05 UNIT-NR-REQ-N                 PIC S9(5) COMP-3 VALUE +65.
+           05 UNIT-NR-REQ                   PIC X(40) VALUE
+              'UNIT NR IS REQUIRED TO PROCEED'.
+
+           05 OTHER-FUEL-NOT-ALLOWED-N      PIC S9(5) COMP-3 VALUE +66.
+           05 OTHER-FUEL-NOT-ALLOWED        PIC X(40) VALUE
+              'OTHER FUEL NOT ALLOWED THIS COMP'.
+
+           05 NR1-FUEL-NOT-ALLOWED-N        PIC S9(5) COMP-3 VALUE +66.
+           05 NR1-FUEL-NOT-ALLOWED          PIC X(40) VALUE
+              'NR1 FUEL NOT ALLOWED THIS COMP'.
+
+           05 NO-REFER-PURC-N               PIC S9(5) COMP-3 VALUE +67.
+           05 NO-REFER-PURC                 PIC X(40) VALUE
+              'NO REFER PURCHASE ALLOWED THIS UNIT'.
+
+           05 PRICE-EXCEEDS-MAX-N           PIC S9(5) COMP-3 VALUE +68.
+           05 PRICE-EXCEEDS-MAX.
+              10 FILLER                     PIC X(40) VALUE
+                 'FUEL PRICE OUT OF RANGE'.
+              10 FILLER                     PIC X(05) VALUE
+                 'MAX: '.
+              10 PRICE-EXCEEDS-MAX-MAX      PIC Z.999.
+              10 FILLER                     PIC X(06) VALUE
+                 ' MIN: '.
+              10 PRICE-EXCEEDS-MAX-MIN      PIC Z.999.
+
+           05 EXCESSIVE-OIL-REQUEST-N       PIC S9(5) COMP-3 VALUE +69.
+           05 EXCESSIVE-OIL-REQUEST.
+              10 FILLER                     PIC X(40) VALUE
+                'OIL REQUEST EXCEEDS AVAILABLE. '.
+              10 FILLER                     PIC X(05) VALUE 'ONLY '.
+              10 XCS-OIL-REQ                PIC ZZ9.
+              10 XCS-OIL-REQ-MSG            PIC X(6).
+              10 FILLER                     PIC X(76) VALUE
+                ' ARE ALLOWED PER TRANSACTION'.
+
+           05 OIL-EXCEEDS-MAX-N             PIC S9(5) COMP-3 VALUE +69.
+           05 OIL-EXCEEDS-MAX.
+              10 FILLER                     PIC X(40) VALUE
+                 'OIL REQUEST EXCEEDS AVAILABLE. '.
+              10 OIL-EXCEEDS-MAX-QTY        PIC ---9.
+              10 FILLER                     PIC X(1) VALUE ' '.
+              10 OIL-EXCEEDS-MAX-QTY-MSG    PIC X(6).
+              10 FILLER                     PIC X(5) VALUE ' AND '.
+              10 OIL-EXCEEDS-MAX-DOL        PIC ---9.99.
+              10 FILLER                     PIC X(25) VALUE
+                 ' DOLLARS ARE AVAILABLE'.
+
+           05 EXCESSIVE-BALANCE-REQUEST-N   PIC S9(5) COMP-3 VALUE +70.
+           05 EXCESSIVE-BALANCE-REQUEST.
+              10 FILLER                     PIC X(40) VALUE
+                'EXPENSE BALANCE HAS BEEN EXCEEDED.'.
+              10 XCS-BAL-REQ-AMT            PIC ZZZ,ZZZ.99-.
+              10 FILLER                     PIC X(70) VALUE
+                'IS AVAILABLE.'.
+
+           05 NEW-EXCESSIVE-BALANCE-REQUEST PIC X(40) VALUE
+              'EXPENSE BALANCE HAS BEEN EXCEEDED       '.
+
+           05 CHECK-ADJUSTMENT-MSG.
+              10 FILLER                     PIC X(40) VALUE
+                 'NOTIFY SERVICE CENTER OF PROCESSING FEE'.
+              10 FILLER                     PIC X(18) VALUE
+                 'CHECK AMT WILL BE '.
+              10 CHECK-ADJUSTMENT-AMT       PIC ZZZZ.99.
+              10 FILLER                     PIC X(08) VALUE
+                 ' FP FEE '.
+              10 CHECK-ADJUSTMENT-FEE       PIC ZZ.99.
+              10 FILLER                     PIC X(12) VALUE
+                 ' OTHER FEES '.
+              10 CHECK-ADJUSTMENT-OT-FEE    PIC ZZZ.99.
+
+           05 MULTIPLY-ERROR-MESSAGE.
+              10 FILLER                     PIC X(40) VALUE
+                 'TOTAL PRICE DOES NOT EQUAL NR OF GLLNS'.
+              10 FILLER                     PIC X(80) VALUE
+                 'TIMES PRICE PER GALLON'.
+
+           05 CHECK-DIGIT-ERROR-MESSAGE-N   PIC S9(5) COMP-3 VALUE +73.
+           05 CHECK-DIGIT-ERROR-MESSAGE.
+              10 FILLER                     PIC X(40) VALUE
+                 'ID NR IS MISSING OR INVALID..'.
+
+           05 SRVC-TYPE-ERROR-MESSAGE-N     PIC S9(5) COMP-3 VALUE +74.
+           05 SRVC-TYPE-ERROR-MESSAGE.
+              10 FILLER                     PIC X(40) VALUE
+                 'FULL/SELF SERVICE CODE INVALID, OR'.
+              10 FILLER                     PIC X(80) VALUE
+                 'DRIVER MAY NOT USE THIS SERVICE.'.
+
+           05 NO-MSG-N                      PIC S9(5) COMP-3 VALUE +75.
+           05 NO-MSG.
+              10 FILLER                     PIC X(4) VALUE 'NO  '.
+              10 NO-TYPE                    PIC X(1) VALUE ' '.
+              10 ERR-AMT                    PIC ZZZ,ZZZ.99-.
+              10 FILLER                     PIC X(10) VALUE SPACES.
+              10 ERR-SML-NAM                PIC X(7).
+           05 CREDIT-HARD-HALT-MSG-N        PIC S9(5) COMP-3 VALUE +75.
+           05 CREDIT-HARD-HALT-MSG.
+              10 FILLER                     PIC X(40) VALUE
+                 'PLEASE HAVE THE DRIVERS COMPANY CALL'.
+              10 FILLER                     PIC X(40) VALUE
+                 'THE COMDATA CREDIT DEPARTMENT'.
+
+           05 MINIMUM-GALLON-MESSAGE-N      PIC S9(5) COMP-3 VALUE +76.
+           05 MINIMUM-GALLON-MESSAGE.
+              10 FILLER                     PIC X(21) VALUE
+                 'DRIVER MUST PURCHASE'.
+              10 MINIMUM-GALLON-NR          PIC ZZZ.ZZ.
+              10 MINIMUM-GALLON-MSG         PIC X(16) VALUE
+                 ' GALLONS'.
+              10 FILLER                     PIC X(80) VALUE
+                 'OF FUEL FOR CASH ADVANCE'.
+
+           05 MINIMUM-GALLON-MESSAGE2-N     PIC S9(5) COMP-3 VALUE +76.
+           05 MINIMUM-GALLON-MESSAGE2.
+              10 FILLER                     PIC X(21) VALUE
+                 'DRIVER MUST PURCHASE'.
+              10 MINIMUM-GALLON-NR2         PIC ZZZ.ZZ.
+              10 MINIMUM-GALLON-MSG2        PIC X(16) VALUE
+                 ' GALLONS'.
+              10 FILLER                    PIC X(80) VALUE
+                 'OF FUEL FOR OIL PURCHASE'.
+
+           05 MAXIMUM-GALLON-MESSAGE-N      PIC S9(5) COMP-3 VALUE +76.
+           05 MAXIMUM-GALLON-MESSAGE.
+              10 FILLER                     PIC X(25) VALUE
+                 'DRIVER MAY ONLY PURCHASE '.
+              10 MAXIMUM-GALLON-NR          PIC ZZ9-.
+              10 MAXIMUM-GALLON-MSG         PIC X(11) VALUE
+                 ' GALLONS OF'.
+              10 FILLER                    PIC X(80) VALUE
+                 'FUEL AT THIS LOCATION.  SEE FMRM 02.'.
+           05 MAXIMUM-GALLON-MESSAGE2.
+              10 FILLER                     PIC X(40) VALUE
+                 'COMPANY MAY ONLY PURCHASE 263 GALLONS'.
+              10 FILLER                    PIC X(80) VALUE
+                 'OF FUEL AT THIS LOCATION.  (CONVERSION PROBLEM)'.
+           05 MAXIMUM-GALLON-MESSAGE3.
+              10 FILLER                     PIC X(20) VALUE
+                 'DRIVER MAY ONLY GET '.
+              10 MAXIMUM-GALLON-NR3         PIC ZZZZ9-.
+              10 MAXIMUM-GALLON-MSG3        PIC X(14) VALUE
+                 ' GALLONS OF   '.
+              10 MAXIMUM-GALLON-MSG3T       PIC X(08) VALUE
+                 ' DIESEL '.
+              10 FILLER                     PIC X(30) VALUE
+                 'FUEL, DUE TO COMPANY LIMITS.'.
+
+           05 EXCESSIVE-ADVANCE-REQUEST-N   PIC S9(5) COMP-3 VALUE +77.
+           05 EXCESSIVE-ADVANCE-REQUEST.
+              10 FILLER                     PIC X(40) VALUE
+                 'ADVANCE REQUEST AMT EXCEEDS AVAILABLE'.
+              10 FILLER                     PIC X(07) VALUE
+                 'FUNDS. '.
+              10 XCS-ADV-REQ-AMT            PIC ZZ,ZZZ.99-.
+              10 FILLER                     PIC X(63) VALUE
+                 'IS AVAILABLE.'.
+           05 EXCESSIVE-ADVANCE-REQUEST1    PIC X(40) VALUE
+              'ADVANCE AMOUNT CAN NOT EXCEED 999.99   '.
+           05 EXCESSIVE-ADVANCE-REQUEST2.
+              10 FILLER                     PIC X(40) VALUE
+                 'DUE TO CONVERSION RATES THIS COMPANY MAY'.
+              10 FILLER                     PIC X(13) VALUE
+                 'ONLY RECEIVE '.
+              10 XCS-ADV-REQ-AMT2           PIC ZZZ.99.
+              10 FILLER                     PIC X(61) VALUE
+                 ' DOLLARS IN CASH'.
+
+           05 NEW-EXCESSIVE-ADVANCE-REQUEST PIC X(40) VALUE
+              'ADV REQUEST AMT EXCEEDS AVAILABLE FUNDS '.
+
+           05 CARD-PURCHASE-EXCEEDED-N      PIC S9(5) COMP-3 VALUE +78.
+           05 CARD-PURCHASE-EXCEEDED.
+              10 FILLER                     PIC X(40) VALUE
+                 'PREMIER CARD PURCHASE LIMIT EXCEEDED'.
+              10 XCS-PURC-REQ               PIC ZZ,ZZZ.99-.
+              10 FILLER                     PIC X(70) VALUE
+                 'IS AVAILABLE.'.
+
+SB0217     05 COMCHEK-MOB-LIMIT-EXCEEDED-N  PIC S9(5) COMP-3
+SB0217                                                VALUE +1443.
+SB0217     05 COMCHEK-MOB-LIMIT-EXCEEDED.
+SB0217        10 FILLER                     PIC X(46) VALUE
+SB0217           'COMCHEK MOBILE FUEL WITHDRAWAL LIMIT EXCEEDED '.
+SB0217        10 CMCKMOB-AVAIL-AMT          PIC ZZ,ZZZ.99-.
+SB0217        10 FILLER                     PIC X(70) VALUE
+SB0217           'IS AVAILABLE.'.
+
+           05 FUEL-PRICE-ERROR-N            PIC S9(5) COMP-3 VALUE +79.
+           05 FUEL-PRICE-ERROR.
+              10 FILLER                     PIC X(05) VALUE
+                 'FUEL '.
+              10 PRICE-ERROR-TYPE           PIC X(07) VALUE 'CASH'.
+              10 FILLER                     PIC X(19) VALUE
+                 'PRICE ERROR: AS OF '.
+              10 PRICE-ERROR-DATE           PIC X(8).
+              10 FILLER                     PIC X(1) VALUE SPACES.
+
+              10 FILLER                     PIC X(21) VALUE
+                 'WE SHOW THE PRICE AS '.
+              10 PRICE-ERROR-AMT            PIC ZZ.999.
+              10 FILLER                     PIC X(1)  VALUE SPACES.
+              10 PRICE-ERROR-OVER-FLAG      PIC X(12) VALUE SPACES.
+              10 PRICE-ERROR-TAX-MSG        PIC X(40) VALUE SPACES.
+
+           05 FUEL-PRICE-ERROR-TAX-N        PIC S9(5) COMP-3 VALUE +79.
+           05 FUEL-PRICE-ERROR-TAX.
+              10 FILLER                     PIC X(05) VALUE
+                 'FUEL '.
+              10 PRICE-ERROR-TYPE-TAX       PIC X(07) VALUE 'CASH'.
+              10 FILLER                     PIC X(19) VALUE
+                 'PRICE ERROR: AS OF '.
+              10 PRICE-ERROR-DATE-TAX       PIC X(8).
+              10 FILLER                     PIC X(1) VALUE SPACES.
+
+              10 FILLER                     PIC X(22) VALUE
+                 'WE SHOW PRICE W/TAX AS'.
+              10 PRICE-ERROR-AMT-TAX        PIC ZZ.999.
+              10 FILLER                     PIC X(1)  VALUE SPACES.
+              10 PRICE-ERROR-OVER-FLAG-TAX  PIC X(12) VALUE SPACES.
+              10 PRICE-ERROR-TAX-MSG-TAX    PIC X(39) VALUE SPACES.
+
+           05 FP-CALC-ERR-MESSAGE-N         PIC S9(5) COMP-3 VALUE +80.
+           05 FP-CALC-ERR-MESSAGE.
+              10 FILLER                     PIC X(40) VALUE
+                 'CALCULATION ERROR. VERIFY ALL FIGURES.'.
+              10 FILLER                     PIC X(80) VALUE
+                 'VERIFY THAT ALL PRICES ARE CASH PRICES. '.
+
+           05 FP-CALC-ERR-MESSAGE2.
+              10 FILLER                     PIC X(40) VALUE
+                 'CALCULATION ERROR. VERIFY ALL FIGURES.'.
+              10 FILLER                     PIC X(18) VALUE
+                 'SUGGESTED COST IS '.
+              10 CALC-ERROR-SUGGESTED       PIC Z.ZZZ.
+              10 FILLER                     PIC X(16) VALUE
+                 ' PER GALLON.'.
+
+           05 FP-CALC-ERR-MESSAGE3.
+              10 FILLER                     PIC X(40) VALUE
+                 'CALCULATION ERROR. VERIFY ALL FIGURES.'.
+              10 FILLER                     PIC X(18) VALUE
+                 'SUGGESTED COST IS '.
+              10 CALC-ERROR-SUGGESTED-3     PIC Z.ZZZ.
+              10 FILLER                     PIC X(16) VALUE
+                 ' PER LITER.'.
+
+           05 DUPLICATE-MESSAGE-N           PIC S9(5) COMP-3 VALUE +82.
+           05 DUPLICATE-MESSAGE.
+              10 DUP-MESSAGE-LINE-1         PIC X(40) VALUE
+                 '2ND TRANSACTION IN 2 HRS:'.
+              10 FILLER                     PIC X(14) VALUE
+                 'REFER TO CTL#'.
+              10 DUPLICATE-TRANSACTION      PIC 9(07).
+
+           05 DUPLICATE-NATS-PRE-AUTH-N     PIC S9(5) COMP-3 VALUE +594.
+           05 DUPLICATE-NATS-PRE-AUTH       PIC X(40) VALUE
+              'DUPLICATE NATS PRE-AUTH REQUEST'.
+
+           05 NEW-DUPLICATE-MESSAGE1        PIC X(40) VALUE
+              '2ND TRANSACTION IN 1 HOUR               '.
+           05 NEW-DUPLICATE-MESSAGE2.
+              10 FILLER                     PIC X(17) VALUE
+              'TRANSACTION NBR: '.
+              10 NEW-DUPLICATE-TRANSACTION  PIC 9(7)  VALUE ZEROS.
+              10 FILLER                     PIC X(9)  VALUE
+              ' AT T/S: '.
+              10 NEW-DUPLICATE-TS           PIC X(5)  VALUE SPACES.
+              10 FILLER                     PIC X(51) VALUE SPACES.
+
+           05 HUB-MESSAGE-N                 PIC S9(5) COMP-3 VALUE +83.
+           05 HUB-MESSAGE.
+              10 FILLER                     PIC X(12) VALUE
+                 'HUB READING '.
+              10 HUB-ERROR                  PIC X(28).
+
            05 PURC-MAX-MESSAGE-N            PIC S9(5) COMP-3 VALUE +84.
            05 PURC-MAX-MESSAGE.
               10 FILLER                     PIC X(40) VALUE
@@ -1199,4 +5037,3 @@ PJ0122     INITIALIZE WS-PD-PROD-DISC-INFO(1).
 PJ0122     INITIALIZE WS-PD-PROD-DISC-INFO(2).
 PJ0122     INITIALIZE WS-PD-PROD-DISC-INFO(3).
 PJ0122     INITIALIZE WS-PD-PROD-DISC-INFO(4).
-
