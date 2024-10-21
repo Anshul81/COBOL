@@ -963,7 +963,7 @@ JS0298 01  WS-HOLD-TOTAL-AMOUNT-FLDS PIC X(100).
            05 WS-SETTLE-ORIG-TS                 PIC X(10).
 JS0298     05 WS-SPLIT-SETTLE-FLAG              PIC X(1).
 JS0298     05 WS-SPLIT-SETTLE-COUNT             PIC 9(1).
-*==============================
+      *==============================
        PROCEDURE DIVISION.
       *==============================
            PERFORM 00100-STARTUP
