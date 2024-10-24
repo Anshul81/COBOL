@@ -175,7 +175,7 @@
       *****************************************************************         
        9910-DISPLAY-IO-STATUS.                                                  
            IF  IO-STATUS NOT NUMERIC                                            
-           OR  IO-STAT1 = '9'                                                   
+           OR  IO-STAT1 = 9                                                  
                MOVE IO-STAT1 TO IO-STATUS-04(1:1)                               
                MOVE 0        TO TWO-BYTES-BINARY                                
                MOVE IO-STAT2 TO TWO-BYTES-RIGHT                                 
