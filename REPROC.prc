@@ -18,7 +18,8 @@
 //* *******************************************************************         
 //* REPRO UTILITY TO LOAD OR UNLOAD VSAM FILE                                   
 //* *******************************************************************         
-//PRC001 EXEC PGM=IDCAMS                                                        
+//PRC001 EXEC PGM=IDCAMS   
+//INCLUDE  MEMBER=COMMONDDS,LIBRARY=YOUR.LIBRARY
 //SYSPRINT DD SYSOUT=*                                                          
 //FILEIN  DD DISP=SHR,                                                          
 //        DSN=NULLFILE                                                          
